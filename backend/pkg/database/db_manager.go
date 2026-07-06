@@ -111,7 +111,7 @@ func (m *DBManager) WithTransaction(ctx context.Context, fn func(tx *gorm.DB) er
 
 	if err := fn(tx); err != nil {
 		if rbErr := tx.Rollback().Error; rbErr != nil {
-			return fmt.Errorf("回滚事务失败：%v (原错误：%w)", rbErr, err)
+			return fmt.Errorf("回滚事务失败：%w (原错误：%w)", rbErr, err)
 		}
 		return err
 	}

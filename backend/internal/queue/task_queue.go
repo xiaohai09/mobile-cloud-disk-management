@@ -189,7 +189,7 @@ func (q *TaskQueue) Dequeue(timeout time.Duration) (*TaskMessage, error) {
 	var message TaskMessage
 	if err := json.Unmarshal([]byte(data), &message); err != nil {
 		if dlqErr := q.deadLetterRaw(data, fmt.Sprintf("反序列化任务消息失败: %v", err)); dlqErr != nil {
-			return nil, fmt.Errorf("反序列化任务消息失败: %w；写入死信失败: %v", err, dlqErr)
+			return nil, fmt.Errorf("反序列化任务消息失败: %w；写入死信失败: %w", err, dlqErr)
 		}
 		return nil, fmt.Errorf("反序列化任务消息失败: %w", err)
 	}

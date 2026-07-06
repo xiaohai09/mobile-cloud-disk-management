@@ -33,15 +33,11 @@ type contextKey string
 
 const authFromCookieKey contextKey = "_mw_auth_from_cookie"
 
-// RateLimiter 基于令牌桶的限流器
+// RateLimiter 基于令牌桶的限流器，内存使用有界
 type RateLimiter struct {
-	mu       sync.Mutex
-	visitors map[string]*visitor
-	rate     int           // 每秒允许的请求数
-	burst    int           // 突发容量
-	cleanup  time.Duration // 清理间隔
-	stopCh   chan struct{}
-	stopOnce sync.Once
+	cache       *ShardedRateLimiterCache
+	rate        int           // 每秒允许的请求数
+	burst       int           // 突发容量
 }
 
 type visitor struct {
@@ -70,74 +66,54 @@ type rateLimitStore interface {
 
 func NewRateLimiter(rate, burst int) *RateLimiter {
 	rl := &RateLimiter{
-		visitors: make(map[string]*visitor),
-		rate:     rate,
-		burst:    burst,
-		cleanup:  5 * time.Minute,
-		stopCh:   make(chan struct{}),
+		rate:  rate,
+		burst: burst,
+		cache: NewShardedRateLimiterCache(16, 10000, 5*time.Minute),
 	}
-	go rl.cleanupLoop()
 	return rl
-}
-
-func (rl *RateLimiter) cleanupLoop() {
-	ticker := time.NewTicker(rl.cleanup)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ticker.C:
-			rl.mu.Lock()
-			for ip, v := range rl.visitors {
-				if time.Since(v.lastSeen) > rl.cleanup {
-					delete(rl.visitors, ip)
-				}
-			}
-			rl.mu.Unlock()
-		case <-rl.stopCh:
-			return
-		}
-	}
 }
 
 func (rl *RateLimiter) Stop() {
 	if rl == nil {
 		return
 	}
-	rl.stopOnce.Do(func() {
-		close(rl.stopCh)
-	})
+	rl.cache.Stop()
 }
 
 func (rl *RateLimiter) Allow(key string) bool {
-	rl.mu.Lock()
-	defer rl.mu.Unlock()
+	if rl == nil || key == "" {
+		return true
+	}
 
-	v, exists := rl.visitors[key]
+	allowed := false
 	now := time.Now()
-
-	if !exists {
-		rl.visitors[key] = &visitor{
-			tokens:    float64(rl.burst) - 1,
-			lastSeen:  now,
-			maxTokens: float64(rl.burst),
-			rate:      float64(rl.rate),
+	rl.cache.Compute(key, func(v *visitor) *visitor {
+		if v == nil {
+			allowed = true
+			return &visitor{
+				tokens:    float64(rl.burst) - 1,
+				lastSeen:  now,
+				maxTokens: float64(rl.burst),
+				rate:      float64(rl.rate),
+			}
 		}
-		return true
-	}
 
-	// 补充令牌
-	elapsed := now.Sub(v.lastSeen).Seconds()
-	v.tokens += elapsed * v.rate
-	if v.tokens > v.maxTokens {
-		v.tokens = v.maxTokens
-	}
-	v.lastSeen = now
+		elapsed := now.Sub(v.lastSeen).Seconds()
+		v.tokens += elapsed * v.rate
+		if v.tokens > v.maxTokens {
+			v.tokens = v.maxTokens
+		}
+		v.lastSeen = now
 
-	if v.tokens >= 1 {
-		v.tokens--
-		return true
-	}
-	return false
+		if v.tokens >= 1 {
+			v.tokens--
+			allowed = true
+		} else {
+			allowed = false
+		}
+		return v
+	})
+	return allowed
 }
 
 // RateLimitMiddleware 限流中间件

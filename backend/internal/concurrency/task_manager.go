@@ -10,6 +10,7 @@ import (
 
 	"caiyun/internal/models"
 	"caiyun/internal/services"
+	"caiyun/pkg/errors"
 )
 
 // TaskResult 表示任务执行结果。
@@ -126,7 +127,11 @@ func (tm *TaskManager) SubmitTask(account *models.Account) (err error) {
 				err = tm.ctx.Err()
 				return
 			}
-			err = fmt.Errorf("提交任务失败: %v", r)
+			if rerr, ok := r.(error); ok {
+				err = fmt.Errorf("%w: %v", errors.ErrTaskSubmitFailed, rerr)
+			} else {
+				err = fmt.Errorf("%s: %v", errors.ErrTaskSubmitFailed.Error(), r)
+			}
 		}
 	}()
 
@@ -177,7 +182,13 @@ func (tm *TaskManager) worker(id int) {
 				defer tm.taskWG.Done()
 				defer func() {
 					if r := recover(); r != nil {
-						tm.recordResult(account.ID, "all", "failed", fmt.Sprintf("任务执行 panic: %v", r), 0, fmt.Errorf("panic: %v", r))
+						var panicErr error
+						if rerr, ok := r.(error); ok {
+							panicErr = fmt.Errorf("%w: %v", errors.ErrTaskExecutionPanic, rerr)
+						} else {
+							panicErr = fmt.Errorf("%s: %v", errors.ErrTaskExecutionPanic.Error(), r)
+						}
+						tm.recordResult(account.ID, "all", "failed", fmt.Sprintf("任务执行 panic: %v", r), 0, panicErr)
 					}
 				}()
 				tm.processAccount(account, id)

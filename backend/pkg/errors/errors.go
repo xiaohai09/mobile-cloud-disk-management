@@ -7,15 +7,17 @@ import (
 
 // 通用业务错误
 var (
-	ErrNotFound           = errors.New("资源不存在")
-	ErrUnauthorized       = errors.New("未授权访问")
-	ErrForbidden          = errors.New("权限不足")
-	ErrInvalidParams      = errors.New("参数错误")
-	ErrInternalServer     = errors.New("服务器内部错误")
-	ErrResourceExists     = errors.New("资源已存在")
-	ErrOperationFailed    = errors.New("操作失败")
-	ErrTimeout            = errors.New("操作超时")
-	ErrServiceUnavailable = errors.New("服务不可用")
+	ErrNotFound            = errors.New("资源不存在")
+	ErrUnauthorized        = errors.New("未授权访问")
+	ErrForbidden           = errors.New("权限不足")
+	ErrInvalidParams       = errors.New("参数错误")
+	ErrInternalServer      = errors.New("服务器内部错误")
+	ErrResourceExists      = errors.New("资源已存在")
+	ErrOperationFailed     = errors.New("操作失败")
+	ErrTimeout             = errors.New("操作超时")
+	ErrServiceUnavailable  = errors.New("服务不可用")
+	ErrTaskSubmitFailed    = errors.New("提交任务失败")
+	ErrTaskExecutionPanic  = errors.New("任务执行 panic")
 )
 
 // AppError 应用错误接口

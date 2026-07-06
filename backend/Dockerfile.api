@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for caiyun-api
 # Build stage
-FROM golang:1.25-alpine AS builder
+FROM --platform=linux/amd64,arm64 golang:1.25-alpine AS builder
 
 WORKDIR /app
 
@@ -16,11 +16,12 @@ COPY . .
 
 # Build arguments
 ARG TARGETARCH
+ARG CGO_ENABLED=0
 ARG VERSION=dev
 ARG COMMIT=unknown
 
 # Build the API binary
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH \
+RUN CGO_ENABLED=$CGO_ENABLED GOOS=linux GOARCH=$TARGETARCH \
     go build -trimpath \
     -ldflags="-s -w -X main.Version=$VERSION -X main.Commit=$COMMIT" \
     -o /out/caiyun-api ./cmd/api
