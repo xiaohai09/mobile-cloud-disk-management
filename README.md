@@ -1,4 +1,4 @@
-# 云飞云盘系统（二创版）
+# 移动云盘管理系统
 
 [![CI Status](https://github.com/xiaohai09/caiyun-refactored/actions/workflows/ci.yml/badge.svg)](https://github.com/xiaohai09/caiyun-refactored/actions/workflows/ci.yml)
 [![Docker Build](https://github.com/xiaohai09/caiyun-refactored/actions/workflows/publish.yml/badge.svg)](https://github.com/xiaohai09/caiyun-refactored/actions/workflows/publish.yml)
