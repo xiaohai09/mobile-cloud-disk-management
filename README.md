@@ -1,7 +1,7 @@
 # 移动云盘管理系统
 
-[![CI Status](https://github.com/xiaohai09/caiyun-refactored/actions/workflows/ci.yml/badge.svg)](https://github.com/xiaohai09/caiyun-refactored/actions/workflows/ci.yml)
-[![Docker Build](https://github.com/xiaohai09/caiyun-refactored/actions/workflows/publish.yml/badge.svg)](https://github.com/xiaohai09/caiyun-refactored/actions/workflows/publish.yml)
+[![CI Status](https://github.com/xiaohai09/mobile-cloud-disk-management/actions/workflows/ci.yml/badge.svg)](https://github.com/xiaohai09/mobile-cloud-disk-management/actions/workflows/ci.yml)
+[![Docker Build](https://github.com/xiaohai09/mobile-cloud-disk-management/actions/workflows/publish.yml/badge.svg)](https://github.com/xiaohai09/mobile-cloud-disk-management/actions/workflows/publish.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Language](https://img.shields.io/badge/Language-Chinese-blue.svg)](#)
 [![English](https://img.shields.io/badge/README-English-green.svg)](README.en.md)
@@ -43,7 +43,7 @@
 
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/xiaohai09/caiyun-refactored.git
+git clone https://github.com/xiaohai09/mobile-cloud-disk-management.git
 cd caiyun-refactored
 
 # 2. 一键启动（自动生成配置并启动）

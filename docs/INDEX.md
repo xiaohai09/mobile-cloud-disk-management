@@ -22,10 +22,10 @@
 
 ## 快速访问
 
-- **GitHub 仓库**：https://github.com/xiaohai09/caiyun-refactored
-- **问题反馈**：https://github.com/xiaohai09/caiyun-refactored/issues
-- **CI/CD 状态**：https://github.com/xiaohai09/caiyun-refactored/actions
-- **Docker 镜像**：https://github.com/xiaohai09/caiyun-refactored/actions/workflows/publish.yml
+- **GitHub 仓库**：https://github.com/xiaohai09/mobile-cloud-disk-management
+- **问题反馈**：https://github.com/xiaohai09/mobile-cloud-disk-management/issues
+- **CI/CD 状态**：https://github.com/xiaohai09/mobile-cloud-disk-management/actions
+- **Docker 镜像**：https://github.com/xiaohai09/mobile-cloud-disk-management/actions/workflows/publish.yml
 
 ## 文档维护
 

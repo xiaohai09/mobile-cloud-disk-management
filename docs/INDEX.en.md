@@ -22,10 +22,10 @@ Welcome to the complete documentation for the Caiyun Cloud Disk System (Derivati
 
 ## Quick Links
 
-- **GitHub Repository**: https://github.com/xiaohai09/caiyun-refactored
-- **Issue Tracker**: https://github.com/xiaohai09/caiyun-refactored/issues
-- **CI/CD Status**: https://github.com/xiaohai09/caiyun-refactored/actions
-- **Docker Images**: https://github.com/xiaohai09/caiyun-refactored/actions/workflows/publish.yml
+- **GitHub Repository**: https://github.com/xiaohai09/mobile-cloud-disk-management
+- **Issue Tracker**: https://github.com/xiaohai09/mobile-cloud-disk-management/issues
+- **CI/CD Status**: https://github.com/xiaohai09/mobile-cloud-disk-management/actions
+- **Docker Images**: https://github.com/xiaohai09/mobile-cloud-disk-management/actions/workflows/publish.yml
 
 ## Documentation Maintenance
 
