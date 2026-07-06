@@ -1,4 +1,55 @@
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: caiyun-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}
+      MYSQL_DATABASE: caiyun
+      MYSQL_USER: ${MYSQL_USER:-caiyun_app}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}
+      TZ: Asia/Shanghai
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./backend/scripts/init_caiyun_database.sql:/docker-entrypoint-initdb.d/001_init_caiyun_database.sql:ro
+    networks:
+      - caiyun-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "1.0"
+
+  redis:
+    image: redis:7.0
+    container_name: caiyun-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?REDIS_PASSWORD is required}"]
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - caiyun-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "0.5"
+
   backend-api:
     image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-xiaohai09}/mobile-cloud-disk-management-api:${IMAGE_TAG:-latest}
     container_name: caiyun-api
@@ -102,6 +153,27 @@ services:
         limits:
           memory: 128m
           cpus: "0.25"
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: caiyun-grafana
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD is required}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./backend/configs/grafana_dashboard.json:/var/lib/grafana/dashboards/caiyun.json:ro
+      - ./backend/configs/grafana_provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - caiyun-network
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: "0.5"
 
 volumes:
   mysql-data:
