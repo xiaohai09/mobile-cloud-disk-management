@@ -40,7 +40,10 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}-api
+          images: |
+            ghcr.io/${{ github.repository_owner }}/mobile-cloud-disk-management-api
+            ghcr.io/${{ github.repository_owner }}/mobile-cloud-disk-management-worker
+            ghcr.io/${{ github.repository_owner }}/mobile-cloud-disk-management-frontend
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -54,7 +57,7 @@ jobs:
           context: .
           file: backend/Dockerfile.api
           push: true
-          tags: ghcr.io/${{ github.repository }}-api:${{ github.sha }}
+          tags: ghcr.io/${{ github.repository_owner }}/mobile-cloud-disk-management-api:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/mobile-cloud-disk-management-api:latest
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -62,20 +65,22 @@ jobs:
       - name: Build and push Worker image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: backend/Dockerfile.worker
+          context: ./backend
+          file: Dockerfile.worker
           push: true
-          tags: ghcr.io/${{ github.repository }}-worker:${{ github.sha }}
+          tags: ghcr.io/${{ github.repository_owner }}/mobile-cloud-disk-management-worker:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/mobile-cloud-disk-management-worker:latest
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Build and push Frontend image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: frontend/Dockerfile
+          context: ./frontend
+          file: Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}-frontend:${{ github.sha }}
+          tags: ghcr.io/${{ github.repository_owner }}/mobile-cloud-disk-management-frontend:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/mobile-cloud-disk-management-frontend:latest
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -85,6 +90,6 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Service | Image | Tag |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|-------|-----|" >> $GITHUB_STEP_SUMMARY
-          echo "| API | ghcr.io/${{ github.repository }}-api | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Worker | ghcr.io/${{ github.repository }}-worker | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Frontend | ghcr.io/${{ github.repository }}-frontend | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| API | ghcr.io/${{ github.repository_owner }}/mobile-cloud-disk-management-api | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Worker | ghcr.io/${{ github.repository_owner }}/mobile-cloud-disk-management-worker | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend | ghcr.io/${{ github.repository_owner }}/mobile-cloud-disk-management-frontend | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
