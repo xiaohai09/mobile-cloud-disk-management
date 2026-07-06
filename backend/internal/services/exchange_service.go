@@ -142,7 +142,7 @@ func (s *ExchangeService) syncScheduledTaskForAccount(exchangeAccount *models.Ex
 
 	tasks, err := s.exchangeTaskRepo.GetByExchangeAccountID(exchangeAccount.ID)
 	if err != nil {
-		return fmt.Errorf("获取任务失败: %v", err)
+		return fmt.Errorf("获取任务失败: %w", err)
 	}
 
 	if existingTask := findActiveScheduledTask(tasks); existingTask != nil {
@@ -157,7 +157,7 @@ func (s *ExchangeService) syncScheduledTaskForAccount(exchangeAccount *models.Ex
 			existingTask.Status = string(models.ExchangeTaskPending)
 		}
 		if err := s.exchangeTaskRepo.Update(existingTask); err != nil {
-			return fmt.Errorf("更新任务失败: %v", err)
+			return fmt.Errorf("更新任务失败: %w", err)
 		}
 		return nil
 	}
@@ -177,7 +177,7 @@ func (s *ExchangeService) syncScheduledTaskForAccount(exchangeAccount *models.Ex
 	}
 
 	if err := s.exchangeTaskRepo.Create(task); err != nil {
-		return fmt.Errorf("创建预定任务失败: %v", err)
+		return fmt.Errorf("创建预定任务失败: %w", err)
 	}
 
 	return nil
@@ -238,11 +238,11 @@ func (s *ExchangeService) DeleteExchangeAccount(id uint, userID uint) error {
 
 	tasks, err := s.exchangeTaskRepo.GetByExchangeAccountID(account.ID)
 	if err != nil {
-		return fmt.Errorf("获取关联抢兑任务失败: %v", err)
+		return fmt.Errorf("获取关联抢兑任务失败: %w", err)
 	}
 	for _, task := range tasks {
 		if err := s.exchangeTaskRepo.Delete(task.ID); err != nil {
-			return fmt.Errorf("删除关联抢兑任务失败: %v", err)
+			return fmt.Errorf("删除关联抢兑任务失败: %w", err)
 		}
 	}
 
