@@ -9,6 +9,19 @@ import (
 	"gorm.io/gorm"
 )
 
+var allowedTables = map[string]bool{
+	"users":             true,
+	"task_configs":      true,
+	"accounts":          true,
+	"products":          true,
+	"exchange_accounts": true,
+	"exchange_tasks":    true,
+}
+
+func isAllowedTable(table string) bool {
+	return allowedTables[table]
+}
+
 type SchemaRepository struct {
 	db *gorm.DB
 }
@@ -96,6 +109,9 @@ func (r *SchemaRepository) validateColumns(table string, requiredCols []string) 
 }
 
 func (r *SchemaRepository) tableExists(table string) (bool, error) {
+	if !isAllowedTable(table) {
+		return false, fmt.Errorf("表名不在允许列表中: %s", table)
+	}
 	var count int64
 	err := r.db.Raw(`
 		SELECT COUNT(*)
@@ -106,6 +122,9 @@ func (r *SchemaRepository) tableExists(table string) (bool, error) {
 }
 
 func (r *SchemaRepository) getColumnSet(table string) (map[string]bool, error) {
+	if !isAllowedTable(table) {
+		return nil, fmt.Errorf("表名不在允许列表中: %s", table)
+	}
 	exists, err := r.tableExists(table)
 	if err != nil {
 		return nil, err

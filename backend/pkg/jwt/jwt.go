@@ -34,6 +34,9 @@ type Manager struct {
 }
 
 func NewManager(secretKey string) *Manager {
+	if secretKey == "" {
+		panic("jwt.NewManager: secret key must not be empty")
+	}
 	return &Manager{
 		secretKey:     []byte(secretKey),
 		signingMethod: jwt.SigningMethodHS256,
@@ -57,10 +60,6 @@ func NewRS256Manager(privateKeyPEM, publicKeyPEM string) (*Manager, error) {
 }
 
 func (m *Manager) GenerateToken(userID uint, username, role string, tokenVersion int, expiration time.Duration) (string, error) {
-	if m.signingMethod == nil {
-		m.signingMethod = jwt.SigningMethodHS256
-	}
-
 	now := time.Now()
 	claims := &Claims{
 		UserID:       userID,
@@ -85,16 +84,19 @@ func (m *Manager) ValidateToken(tokenString string) (*Claims, error) {
 	if !isCanonicalJWT(tokenString) {
 		return nil, ErrInvalidToken
 	}
-	if m.signingMethod == nil {
-		m.signingMethod = jwt.SigningMethodHS256
-	}
 
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		if token.Method.Alg() != m.signingMethod.Alg() {
+		if token.Method == jwt.SigningMethodNone {
 			return nil, ErrInvalidToken
 		}
 		if m.signingMethod == jwt.SigningMethodRS256 {
+			if token.Method != jwt.SigningMethodRS256 {
+				return nil, ErrInvalidToken
+			}
 			return m.publicKey, nil
+		}
+		if m.signingMethod != nil && token.Method.Alg() != m.signingMethod.Alg() {
+			return nil, ErrInvalidToken
 		}
 		return m.secretKey, nil
 	})

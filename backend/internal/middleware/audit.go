@@ -375,6 +375,8 @@ var sensitiveAuditKeys = []string{
 	"api_key",
 	"apikey",
 	"secret",
+	"access_key",
+	"bdstoken",
 }
 
 // AuditLogFilter 审计日志过滤器（用于排除某些路径）

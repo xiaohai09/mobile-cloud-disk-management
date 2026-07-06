@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -61,12 +62,28 @@ func NewRedisClient(addr, password string, db int) (*RedisCache, error) {
 		return nil, fmt.Errorf("Redis连接失败: %w", err)
 	}
 
+	if password == "" && !isLocalRedisAddr(addr) {
+		log.Printf("Redis 未配置密码，且地址 %s 非 localhost/127.0.0.1，存在安全风险，建议为 Redis 配置密码并启用 REDIS_REQUIRE_AUTH", addr)
+	}
+
 	return &RedisCache{
 		client:           rdb,
 		ctx:              baseCtx,
 		cancel:           cancel,
 		operationTimeout: operationTimeout,
 	}, nil
+}
+
+func isLocalRedisAddr(addr string) bool {
+	host := addr
+	if idx := strings.LastIndex(addr, ":"); idx > 0 {
+		host = addr[:idx]
+	}
+	switch strings.TrimSpace(host) {
+	case "localhost", "127.0.0.1", "::1":
+		return true
+	}
+	return false
 }
 
 func (r *RedisCache) operationContext(extra ...time.Duration) (context.Context, context.CancelFunc) {

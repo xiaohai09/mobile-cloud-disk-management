@@ -52,8 +52,6 @@ type visitor struct {
 }
 
 type authUserCacheEntry struct {
-	username     string
-	role         string
 	tokenVersion int
 	expiresAt    time.Time
 }
@@ -478,10 +476,12 @@ func getAuthUserSnapshot(ctx context.Context, userRepo *repository.UserRepositor
 	if cached, ok := authUserCache.Load(claims.UserID); ok {
 		entry, ok := cached.(authUserCacheEntry)
 		if ok && entry.tokenVersion == claims.TokenVersion && now.Before(entry.expiresAt) {
+			// 缓存仅用于验证 token_version 是否已失效，避免角色/用户名过期后继续被使用。
+			// username/role 始终取当前 JWT 载荷，由 token_version 保证不可被撤销的旧会话绕过。
 			return &authUserSnapshot{
-				username:     entry.username,
-				role:         entry.role,
-				tokenVersion: entry.tokenVersion,
+				username:     claims.Username,
+				role:         claims.Role,
+				tokenVersion: claims.TokenVersion,
 			}, nil
 		}
 	}
@@ -492,29 +492,27 @@ func getAuthUserSnapshot(ctx context.Context, userRepo *repository.UserRepositor
 		return nil, err
 	}
 	entry := authUserCacheEntry{
-		username:     user.Username,
-		role:         user.Role,
 		tokenVersion: user.TokenVersion,
 		expiresAt:    now.Add(authUserCacheTTL()),
 	}
 	authUserCache.Store(user.ID, entry)
 	return &authUserSnapshot{
-		username:     entry.username,
-		role:         entry.role,
-		tokenVersion: entry.tokenVersion,
+		username:     user.Username,
+		role:         user.Role,
+		tokenVersion: user.TokenVersion,
 	}, nil
 }
 
 func authUserCacheTTL() time.Duration {
 	raw := strings.TrimSpace(os.Getenv("AUTH_USER_CACHE_TTL"))
 	if raw == "" {
-		// 缩短默认 TTL 到 10 秒，降低改密/重置后旧会话仍可用的窗口。
-		return 10 * time.Second
+		// 缩短默认 TTL 到 2 秒，降低改密/重置后旧会话仍可用的窗口，作为纵深防御。
+		return 2 * time.Second
 	}
 	if duration, err := time.ParseDuration(raw); err == nil && duration > 0 {
 		return duration
 	}
-	return 10 * time.Second
+	return 2 * time.Second
 }
 
 // InvalidateAuthUserCache 在用户改密、重置密码、删除等场景主动清除缓存，

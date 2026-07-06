@@ -23,9 +23,32 @@ var upgrader = websocket.Upgrader{
 		if origin == "" {
 			return false
 		}
+
+		parsed, err := url.Parse(origin)
+		if err != nil || parsed.Host == "" {
+			return false
+		}
+
+		originHost := strings.ToLower(parsed.Hostname())
+
+		if isLocalOrigin(originHost) {
+			if !strings.EqualFold(os.Getenv("ALLOW_LOCAL_WS"), "true") {
+				return false
+			}
+			if strings.ToLower(parsed.Scheme) == "ws" {
+				return false
+			}
+			return sameOriginHost(origin, r.Host)
+		}
+
+		if strings.ToLower(parsed.Scheme) == "ws" {
+			return false
+		}
+
 		if sameOriginHost(origin, r.Host) {
 			return true
 		}
+
 		allowedOrigins := strings.TrimSpace(os.Getenv("ALLOWED_ORIGINS"))
 		if allowedOrigins == "" {
 			return false
@@ -76,6 +99,16 @@ func defaultPort(scheme string) string {
 	default:
 		return ""
 	}
+}
+
+func isLocalOrigin(host string) bool {
+	return host == "localhost" ||
+		host == "127.0.0.1" ||
+		host == "::1"
+}
+
+func isSecureForwarded(r *http.Request) bool {
+	return strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https")
 }
 
 // Message WebSocket消息结构

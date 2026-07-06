@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"caiyun/internal/cache"
@@ -82,12 +83,18 @@ func InitCore() (*Core, error) {
 		return nil, fmt.Errorf("数据库连接失败: %w", err)
 	}
 
+	redisPassword := GetEnv("REDIS_PASSWORD", "")
+	if GetBoolEnv("REDIS_REQUIRE_AUTH", false) && redisPassword == "" {
+		_ = closeGormDB(db)
+		log.Fatal("Redis 认证失败: 已启用 REDIS_REQUIRE_AUTH，但 REDIS_PASSWORD 为空")
+	}
+
 	redisCache, err := cache.NewRedisCache(cache.RedisConfig{
 		Host: GetEnv("REDIS_HOST", "localhost"),
 		Port: GetEnv("REDIS_PORT", "6379"),
 		// Redis 本地部署通常不设置密码，REDIS_PASSWORD= 空值是合法配置。
 		// 不能用 GetSecretEnv，否则 ALLOW_INSECURE_DEFAULTS=false 时会把空密码当成启动致命错误。
-		Password: GetEnv("REDIS_PASSWORD", ""),
+		Password: redisPassword,
 		DB:       GetIntEnv("REDIS_DB", 0),
 	})
 	if err != nil {

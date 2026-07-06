@@ -1,9 +1,8 @@
-package main
+package bootstrap
 
 import (
 	"net/http"
 
-	"caiyun/internal/bootstrap"
 	"caiyun/internal/handlers"
 	htthandlers "caiyun/internal/interfaces/http"
 	"caiyun/internal/middleware"
@@ -13,7 +12,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func registerRoutes(r *gin.Engine, deps bootstrap.RouteDependencies) {
+func registerRoutes(r *gin.Engine, deps RouteDependencies) {
 	registerHealthAndMetricsRoutes(r, deps)
 	registerAuthRoutes(r, deps.Handlers.Auth)
 	registerProtectedRoutes(r, deps)
@@ -24,7 +23,7 @@ func registerRoutes(r *gin.Engine, deps bootstrap.RouteDependencies) {
 	registerPlatformRoutes(r, deps)
 }
 
-func registerHealthAndMetricsRoutes(r *gin.Engine, deps bootstrap.RouteDependencies) {
+func registerHealthAndMetricsRoutes(r *gin.Engine, deps RouteDependencies) {
 	healthHandler := func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok", "service": "caiyun-api"})
 	}
@@ -48,7 +47,7 @@ func registerAuthRoutes(r *gin.Engine, authHandler *handlers.AuthHandler) {
 	}
 }
 
-func registerProtectedRoutes(r *gin.Engine, deps bootstrap.RouteDependencies) {
+func registerProtectedRoutes(r *gin.Engine, deps RouteDependencies) {
 	h := deps.Handlers
 	api := r.Group("/api")
 	api.Use(
@@ -77,7 +76,7 @@ func registerProtectedRoutes(r *gin.Engine, deps bootstrap.RouteDependencies) {
 	}
 }
 
-func registerAdminRoutes(r *gin.Engine, deps bootstrap.RouteDependencies) {
+func registerAdminRoutes(r *gin.Engine, deps RouteDependencies) {
 	h := deps.Handlers
 	admin := r.Group("/api/admin")
 	admin.Use(
@@ -96,7 +95,7 @@ func registerAdminRoutes(r *gin.Engine, deps bootstrap.RouteDependencies) {
 	}
 }
 
-func registerWebSocketRoute(r *gin.Engine, deps bootstrap.RouteDependencies) {
+func registerWebSocketRoute(r *gin.Engine, deps RouteDependencies) {
 	r.GET("/ws", middleware.AuthMiddlewareWithUser(deps.JWTManager, deps.Repos.User), func(c *gin.Context) {
 		userIDVal, exists := c.Get("user_id")
 		if !exists {
@@ -112,7 +111,7 @@ func registerWebSocketRoute(r *gin.Engine, deps bootstrap.RouteDependencies) {
 	})
 }
 
-func registerExportRoutes(r *gin.Engine, deps bootstrap.RouteDependencies) {
+func registerExportRoutes(r *gin.Engine, deps RouteDependencies) {
 	exportHandler := htthandlers.NewExportHandler(deps.Handlers.ExportSvc)
 	exportRoutes := r.Group("/api")
 	exportRoutes.Use(
@@ -126,7 +125,7 @@ func registerExportRoutes(r *gin.Engine, deps bootstrap.RouteDependencies) {
 	}
 }
 
-func registerWebhookRoutes(r *gin.Engine, deps bootstrap.RouteDependencies) {
+func registerWebhookRoutes(r *gin.Engine, deps RouteDependencies) {
 	webhookHandler := htthandlers.NewWebhookHandler(deps.Handlers.WebhookSvc)
 	webhookRoutes := r.Group("/api")
 	webhookRoutes.Use(
@@ -143,7 +142,7 @@ func registerWebhookRoutes(r *gin.Engine, deps bootstrap.RouteDependencies) {
 	}
 }
 
-func registerPlatformRoutes(r *gin.Engine, deps bootstrap.RouteDependencies) {
+func registerPlatformRoutes(r *gin.Engine, deps RouteDependencies) {
 	platformRoutes := r.Group("/api/platforms")
 	platformRoutes.Use(
 		middleware.AuthMiddlewareWithUser(deps.JWTManager, deps.Repos.User),
