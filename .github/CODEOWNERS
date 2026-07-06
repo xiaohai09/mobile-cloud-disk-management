@@ -1,0 +1,21 @@
+# CODEOWNERS
+
+# 默认由 AI 账号维护 / Default maintainer: AI account
+* @xiaohai09
+
+# 后端代码
+backend/**/*.go @xiaohai09
+
+# 前端代码
+frontend/**/*.vue @xiaohai09
+frontend/**/*.ts @xiaohai09
+frontend/**/*.tsx @xiaohai09
+
+# 部署与 CI
+.github/** @xiaohai09
+docker-compose.yml @xiaohai09
+Dockerfile* @xiaohai09
+
+# 文档
+docs/** @xiaohai09
+README*.md @xiaohai09
