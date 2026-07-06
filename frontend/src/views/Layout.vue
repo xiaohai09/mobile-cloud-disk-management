@@ -112,6 +112,37 @@
         </div>
 
         <div class="header-right">
+          <!-- 语言切换 -->
+          <el-dropdown
+            trigger="click"
+            @command="handleLanguageChange"
+          >
+            <el-button
+              type="text"
+              class="header-btn hidden-mobile-control"
+            >
+              <el-icon :size="20">
+                <Memo />
+              </el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item
+                  command="zh-CN"
+                  :disabled="locale === 'zh-CN'"
+                >
+                  中文
+                </el-dropdown-item>
+                <el-dropdown-item
+                  command="en-US"
+                  :disabled="locale === 'en-US'"
+                >
+                  English
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+
           <!-- 通知中心 -->
           <NotificationCenter />
 
@@ -272,6 +303,7 @@
 import '@/styles/element/layout'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Cloudy,
@@ -285,7 +317,8 @@ import {
   ArrowDown,
   SwitchButton,
   Download,
-  Bell
+  Bell,
+  Memo
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/store/auth'
 import Breadcrumb from '@/components/Breadcrumb.vue'
@@ -297,6 +330,7 @@ import MobileBottomNav from '@/components/MobileBottomNav.vue'
 
 const route = useRoute()
 const router = useRouter()
+const { locale } = useI18n()
 const authStore = useAuthStore()
 const profileVisible = ref(false)
 const settingsVisible = ref(false)
@@ -345,6 +379,12 @@ const toggleFullscreen = () => {
   } else {
     document.exitFullscreen()
   }
+}
+
+// 处理语言切换
+const handleLanguageChange = (lang: string) => {
+  locale.value = lang
+  localStorage.setItem('language', lang)
 }
 
 // 处理用户菜单命令

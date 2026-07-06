@@ -18,6 +18,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   DataLine,
   User,
@@ -31,22 +32,23 @@ import { useAuthStore } from '@/store/auth'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const authStore = useAuthStore()
 
 const isAdmin = computed(() => authStore.user?.role === 'admin')
 
 const menuItems = computed(() => {
   const items = [
-    { path: '/dashboard', label: '首页', icon: DataLine },
-    { path: '/accounts', label: '账号', icon: User },
-    { path: '/logs', label: '日志', icon: List },
-    { path: '/exchange', label: '兑换', icon: Shop },
-    { path: '/export', label: '导出', icon: Download },
-    { path: '/webhooks', label: '通知', icon: Bell }
+    { path: '/dashboard', label: t('menu.dashboard'), icon: DataLine },
+    { path: '/accounts', label: t('menu.accounts'), icon: User },
+    { path: '/logs', label: t('menu.tasks'), icon: List },
+    { path: '/exchange', label: t('menu.exchange'), icon: Shop },
+    { path: '/export', label: t('menu.export'), icon: Download },
+    { path: '/webhooks', label: t('menu.webhook'), icon: Bell }
   ]
 
   if (isAdmin.value) {
-    items.push({ path: '/admin', label: '管理', icon: Setting })
+    items.push({ path: '/admin', label: t('menu.settings'), icon: Setting })
   }
 
   return items

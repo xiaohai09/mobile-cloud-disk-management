@@ -116,7 +116,7 @@
               type="primary"
               link
               size="small"
-              @click="downloadExport(row)"
+              @click="downloadExport"
             >
               下载
             </el-button>

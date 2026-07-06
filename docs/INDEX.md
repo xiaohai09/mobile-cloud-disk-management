@@ -13,6 +13,7 @@
 | 3 | [API 文档](API.md) | [API Documentation](API.en.md) | 认证、导出 API、Webhook API、错误码、速率限制 |
 | 4 | [用户指南](USER_GUIDE.md) | [User Guide](USER_GUIDE.en.md) | 角色说明、功能模块、FAQ、技术支持 |
 | 5 | [测试报告](TEST_REPORT.md) | [Test Report](TEST_REPORT.en.md) | 构建验证、E2E 测试、Docker 验证、安全审计 |
+| 6 | [贡献者指南](CONTRIBUTING.md) | [Contributing Guide](CONTRIBUTING.en.md) | 行为准则、开发规范、PR 流程、发布流程 |
 
 ## 语言切换
 

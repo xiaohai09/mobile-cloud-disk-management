@@ -17,6 +17,7 @@
 | `docs/API.md` | `docs/API.en.md` |
 | `docs/USER_GUIDE.md` | `docs/USER_GUIDE.en.md` |
 | `docs/TEST_REPORT.md` | `docs/TEST_REPORT.en.md` |
+| `CONTRIBUTING.md` | `CONTRIBUTING.en.md` |
 
 ## 语言切换说明
 
