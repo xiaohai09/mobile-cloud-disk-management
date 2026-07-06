@@ -1,0 +1,33 @@
+# Configuration for Stale Issues
+# Number of days of inactivity before an issue becomes stale
+daysUntilStale: 60
+# Number of days of inactivity before a stale issue is closed
+daysUntilClose: 14
+# Issues with these labels will never be considered stale
+exemptLabels:
+  - pinned
+  - security
+  - bug
+  - enhancement
+  - question
+# Label to use when marking an issue as stale
+staleLabel: stale
+# Comment to post when marking an issue as stale
+markComment: >
+  此 Issue 已长时间未活跃，标记为 stale。
+  如果问题仍然存在，请回复 "still active" 或移除 stale 标签。
+  否则将在 14 天后自动关闭。
+  
+  This issue has been automatically marked as stale because it has not had
+  recent activity. It will be closed in 14 days if no further activity occurs.
+  If this issue is still relevant, please reply with "still active" or remove
+  the stale label.
+# Comment to post when closing a stale issue
+closeComment: >
+  此 Issue 已自动关闭，因为长时间未活跃。
+  如果问题仍然存在，请重新打开此 Issue 或创建新的 Issue。
+  
+  This issue has been automatically closed due to inactivity. If the issue
+  is still relevant, please reopen it or create a new issue.
+# Limit to only open or closed issues
+only: issues

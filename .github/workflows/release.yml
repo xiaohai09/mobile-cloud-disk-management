@@ -1,0 +1,63 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. v1.0.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get the latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LATEST_TAG" ]; then
+            CHANGELOG="## 首次发布 / First Release\n\n- 基础功能完整实现\n- Docker 多阶段构建\n- 中英双语文档\n- CI/CD 自动化"
+          else
+            CHANGELOG=$(git log ${LATEST_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          fi
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name || inputs.version }}
+          release_name: 移动云盘管理系统 ${{ github.ref_name || inputs.version }}
+          body: |
+            ## 更新内容 / What's New
+
+            ${{ steps.changelog.outputs.changelog }}
+
+            ## 快速开始 / Quick Start
+
+            ```bash
+            docker compose up -d
+            ```
+
+            ## 文档 / Documentation
+
+            - [中文文档](https://github.com/xiaohai09/mobile-cloud-disk-management/blob/main/docs/INDEX.md)
+            - [English Docs](https://github.com/xiaohai09/mobile-cloud-disk-management/blob/main/docs/INDEX.en.md)
+          draft: false
+          prerelease: false
