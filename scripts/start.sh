@@ -65,8 +65,8 @@ fi
 
 # Build or pull images
 if [ "$MODE" = "prod" ]; then
-    echo "Pulling production images..."
-    docker compose pull
+    echo "Pulling production images from GHCR..."
+    IMAGE_TAG="${IMAGE_TAG:-latest}" docker compose -f docker-compose.prod.yml pull
 else
     echo "Building images locally..."
     docker compose build --no-cache
@@ -74,7 +74,11 @@ fi
 
 # Start services
 echo "Starting caiyun services..."
-docker compose up -d
+if [ "$MODE" = "prod" ]; then
+    IMAGE_TAG="${IMAGE_TAG:-latest}" docker compose -f docker-compose.prod.yml up -d
+else
+    docker compose up -d
+fi
 
 # Wait for services to be ready
 echo "Waiting for services to be healthy..."
@@ -85,7 +89,11 @@ echo ""
 echo "=========================================="
 echo "  Service Status"
 echo "=========================================="
-docker compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+if [ "$MODE" = "prod" ]; then
+    IMAGE_TAG="${IMAGE_TAG:-latest}" docker compose -f docker-compose.prod.yml ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+else
+    docker compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+fi
 
 echo ""
 echo "=========================================="
@@ -96,10 +104,6 @@ echo "API:       http://localhost:8080"
 echo "API Health: http://localhost:8080/health"
 echo "Grafana:   http://localhost:3000"
 echo ""
-echo "Default Admin Account:"
-echo "  Username: ${DEFAULT_ADMIN_USERNAME:-admin}"
-echo "  Password: ${DEFAULT_ADMIN_PASSWORD:-admin123}"
-echo "=========================================="
 
 # Try to access frontend
 if curl -sf http://localhost/ >/dev/null 2>&1; then
@@ -116,12 +120,33 @@ fi
 
 echo ""
 echo "=========================================="
+echo "  Default Admin Account"
+echo "=========================================="
+echo "  Username: ${DEFAULT_ADMIN_USERNAME:-admin}"
+echo "  Password: ${DEFAULT_ADMIN_PASSWORD:-admin123}"
+echo ""
+echo "Note: If the admin account already exists, the container"
+echo "entrypoint will skip creation on subsequent starts."
+echo "=========================================="
+
+echo ""
+echo "=========================================="
 echo "  Next Steps"
 echo "=========================================="
 echo "1. Visit http://localhost to access the frontend"
 echo "2. Login with default admin account:"
 echo "   Username: ${DEFAULT_ADMIN_USERNAME:-admin}"
 echo "   Password: ${DEFAULT_ADMIN_PASSWORD:-admin123}"
-echo "3. Check logs: docker compose logs -f [service]"
-echo "4. Stop:     docker compose down"
+echo "3. Check logs:"
+if [ "$MODE" = "prod" ]; then
+    echo "   docker compose -f docker-compose.prod.yml logs -f [service]"
+else
+    echo "   docker compose logs -f [service]"
+fi
+echo "4. Stop:"
+if [ "$MODE" = "prod" ]; then
+    echo "   docker compose -f docker-compose.prod.yml down"
+else
+    echo "   docker compose down"
+fi
 echo "=========================================="

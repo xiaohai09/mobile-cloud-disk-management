@@ -7,12 +7,48 @@
 - 内存：4GB+（推荐 8GB）
 - 磁盘：20GB+ 可用空间
 
+## 当前部署方式
+
+**注意：本项目当前为多容器架构，不支持单镜像一键拉取部署。**
+完整运行至少需要：MySQL、Redis、后端 API、Worker、前端 Nginx。
+
+推荐方式：在服务器上克隆仓库后直接 `docker compose up -d`。
+
 ## 快速部署
 
-### 方式一：一键启动（推荐）
+### 方式一：克隆仓库一键启动（推荐）
 
 ```bash
-cd /root/caiyun-refactored
+git clone https://github.com/xiaohai09/mobile-cloud-disk-management.git
+cd mobile-cloud-disk-management
+cp .env.example .env
+# 可修改 .env 中的密码和 JWT secret
+docker compose up -d
+```
+
+部署完成后访问：
+
+| 服务 | 地址 |
+|------|------|
+| 前端 | http://localhost |
+| API | http://localhost:8080 |
+| API Health | http://localhost:8080/health |
+| Grafana | http://localhost:3000 |
+
+默认管理员账号：
+
+| 项目 | 值 |
+|------|-----|
+| 用户名 | admin |
+| 密码 | admin123 |
+
+> 说明：若 `users` 表中不存在该用户名，容器启动时会自动创建。
+
+### 方式二：使用 scripts/start.sh
+
+```bash
+git clone https://github.com/xiaohai09/mobile-cloud-disk-management.git
+cd mobile-cloud-disk-management
 chmod +x scripts/start.sh
 ./scripts/start.sh
 ```
@@ -22,10 +58,10 @@ chmod +x scripts/start.sh
 - 拉取/构建 Docker 镜像
 - 启动所有服务（MySQL、Redis、API、Worker、Frontend、Grafana）
 - 执行健康检查
-- **自动创建默认管理员账号（admin / admin123）**
-- **打印访问地址和默认账号密码**
+- 自动创建默认管理员账号（admin / admin123）
+- 打印访问地址和默认账号密码
 
-### 方式二：Docker Compose 手动启动
+### 方式三：Docker Compose 手动启动
 
 ```bash
 # 1. 复制环境变量模板
@@ -56,6 +92,8 @@ docker compose logs -f
 | `WORKER_MONITOR_TOKEN` | Worker 监控令牌 | 随机生成 |
 | `GRAFANA_ADMIN_PASSWORD` | Grafana 管理员密码 | 随机生成 |
 | `CORS_ALLOWED_ORIGINS` | CORS 允许源 | `http://localhost:80` |
+| `DEFAULT_ADMIN_USERNAME` | 默认管理员用户名 | `admin` |
+| `DEFAULT_ADMIN_PASSWORD` | 默认管理员密码 | `admin123` |
 
 ## 服务访问地址
 
