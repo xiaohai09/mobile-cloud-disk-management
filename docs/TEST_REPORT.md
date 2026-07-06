@@ -1,4 +1,4 @@
-# 二创重构项目 - 测试与验证报告
+# 测试与验证报告
 
 ## 1. 后端构建验证
 
@@ -133,6 +133,7 @@ bash -n scripts/start.sh && docker compose config
 - ✅ `docs/DEPLOYMENT.md` - 部署指南、环境要求、故障排查
 - ✅ `docs/API.md` - API 文档、认证、端点说明
 - ✅ `docs/USER_GUIDE.md` - 用户指南、角色说明、FAQ
+- ✅ `docs/TEST_REPORT.md` - 测试验证报告
 
 ### 脚本
 - ✅ `scripts/start.sh` - 一键启动脚本 (dev/prod 模式)

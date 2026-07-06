@@ -1,15 +1,15 @@
-# API 文档
+# API Documentation
 
-## 基础信息
+## Basic Information
 
 - **Base URL**: `http://localhost:8080/api`
-- **认证方式**: JWT Bearer Token
-- **请求格式**: `application/json`
-- **响应格式**: `application/json`
+- **Authentication**: JWT Bearer Token
+- **Request Format**: `application/json`
+- **Response Format**: `application/json`
 
-## 认证
+## Authentication
 
-### 登录
+### Login
 
 ```http
 POST /api/auth/login
@@ -21,7 +21,7 @@ Content-Type: application/json
 }
 ```
 
-**响应示例**：
+**Response Example**：
 
 ```json
 {
@@ -40,23 +40,23 @@ Content-Type: application/json
 }
 ```
 
-### 刷新 Token
+### Refresh Token
 
 ```http
 POST /api/auth/refresh
 Authorization: Bearer <refresh_token>
 ```
 
-### 登出
+### Logout
 
 ```http
 POST /api/auth/logout
 Authorization: Bearer <access_token>
 ```
 
-## 数据导出 API
+## Data Export API
 
-### 创建导出任务
+### Create Export Task
 
 ```http
 POST /api/export/tasks
@@ -72,7 +72,7 @@ Content-Type: application/json
 }
 ```
 
-**响应示例**：
+**Response Example**：
 
 ```json
 {
@@ -87,14 +87,14 @@ Content-Type: application/json
 }
 ```
 
-### 获取导出历史
+### Get Export History
 
 ```http
 GET /api/export/history?page=1&page_size=20
 Authorization: Bearer <access_token>
 ```
 
-**响应示例**：
+**Response Example**：
 
 ```json
 {
@@ -118,7 +118,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-### 下载导出文件
+### Download Export File
 
 ```http
 GET /api/export/download/{task_id}
@@ -127,7 +127,7 @@ Authorization: Bearer <access_token>
 
 ## Webhook API
 
-### 创建 Webhook 端点
+### Create Webhook Endpoint
 
 ```http
 POST /api/webhooks
@@ -135,7 +135,7 @@ Authorization: Bearer <access_token>
 Content-Type: application/json
 
 {
-  "name": "交易完成通知",
+  "name": "Transaction Completion Notification",
   "url": "https://example.com/webhook",
   "events": ["exchange.completed", "exchange.failed"],
   "is_active": true,
@@ -145,7 +145,7 @@ Content-Type: application/json
 }
 ```
 
-**响应示例**：
+**Response Example**：
 
 ```json
 {
@@ -153,7 +153,7 @@ Content-Type: application/json
   "message": "success",
   "data": {
     "id": 1,
-    "name": "交易完成通知",
+    "name": "Transaction Completion Notification",
     "url": "https://example.com/webhook",
     "events": ["exchange.completed", "exchange.failed"],
     "is_active": true,
@@ -163,14 +163,14 @@ Content-Type: application/json
 }
 ```
 
-### 获取 Webhook 列表
+### Get Webhook List
 
 ```http
 GET /api/webhooks
 Authorization: Bearer <access_token>
 ```
 
-### 更新 Webhook
+### Update Webhook
 
 ```http
 PUT /api/webhooks/{webhook_id}
@@ -178,26 +178,26 @@ Authorization: Bearer <access_token>
 Content-Type: application/json
 
 {
-  "name": "更新后的名称",
+  "name": "Updated Name",
   "is_active": false
 }
 ```
 
-### 删除 Webhook
+### Delete Webhook
 
 ```http
 DELETE /api/webhooks/{webhook_id}
 Authorization: Bearer <access_token>
 ```
 
-### 获取投递日志
+### Get Delivery Logs
 
 ```http
 GET /api/webhooks/{webhook_id}/deliveries?page=1&page_size=20
 Authorization: Bearer <access_token>
 ```
 
-**响应示例**：
+**Response Example**：
 
 ```json
 {
@@ -219,50 +219,50 @@ Authorization: Bearer <access_token>
 }
 ```
 
-## 通用错误码
+## Common Error Codes
 
-| 错误码 | 说明 |
-|--------|------|
-| 400 | 请求参数错误 |
-| 401 | 未认证或 Token 过期 |
-| 403 | 无权限访问 |
-| 404 | 资源不存在 |
-| 429 | 请求过于频繁 |
-| 500 | 服务器内部错误 |
+| Code | Description |
+|------|-------------|
+| 400 | Bad Request - Invalid parameters |
+| 401 | Unauthorized - Missing or expired token |
+| 403 | Forbidden - Insufficient permissions |
+| 404 | Not Found - Resource does not exist |
+| 429 | Too Many Requests - Rate limit exceeded |
+| 500 | Internal Server Error |
 
-**通用响应格式**：
+**General Response Format**：
 
 ```json
 {
   "code": 400,
-  "message": "参数错误：缺少必填字段 'username'",
+  "message": "Parameter error: missing required field 'username'",
   "data": null
 }
 ```
 
-## Webhook 事件类型
+## Webhook Event Types
 
-| 事件类型 | 触发时机 |
-|----------|----------|
-| `exchange.completed` | 兑换任务完成 |
-| `exchange.failed` | 兑换任务失败 |
-| `exchange.created` | 兑换任务创建 |
-| `task.completed` | 任务执行完成 |
-| `task.failed` | 任务执行失败 |
-| `account.created` | 账号创建 |
-| `account.updated` | 账号更新 |
-| `account.deleted` | 账号删除 |
+| Event Type | Trigger |
+|------------|---------|
+| `exchange.completed` | Exchange task completed |
+| `exchange.failed` | Exchange task failed |
+| `exchange.created` | Exchange task created |
+| `task.completed` | Task execution completed |
+| `task.failed` | Task execution failed |
+| `account.created` | Account created |
+| `account.updated` | Account updated |
+| `account.deleted` | Account deleted |
 
-## Webhook 签名验证
+## Webhook Signature Verification
 
-每个 Webhook 请求都会在 Header 中携带签名：
+Each webhook request includes a signature in the Header:
 
 ```
 X-Caiyun-Signature: sha256=<signature>
 X-Caiyun-Timestamp: 1699072800
 ```
 
-验证方式：
+Verification method:
 
 ```python
 import hmac
@@ -275,10 +275,10 @@ signature = hmac.new(
 ).hexdigest()
 ```
 
-## 速率限制
+## Rate Limiting
 
-- 登录接口：`5 次/分钟/IP`
-- 其他接口：`100 次/分钟/用户`
-- 导出接口：`10 次/小时/用户`
+- Login endpoint: `5 requests/minute/IP`
+- Other endpoints: `100 requests/minute/user`
+- Export endpoints: `10 requests/hour/user`
 
-超出限制会返回 `429 Too Many Requests`。
+Exceeding limits returns `429 Too Many Requests`.
