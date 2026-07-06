@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 文档中心 / Documentation
+    url: https://github.com/xiaohai09/caiyun-refactored/blob/main/docs/INDEX.md
+    about: 请先查阅文档，可能已有答案。 / Please check the docs first.
