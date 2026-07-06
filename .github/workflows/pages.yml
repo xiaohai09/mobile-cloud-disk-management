@@ -34,6 +34,10 @@ jobs:
           npm ci
 
       - name: Build docs site
+        env:
+          NODE_ENV: production
+          CI: true
+          NODE_OPTIONS: --max-old-space-size=4096
         run: |
           cd frontend
           npm run build
