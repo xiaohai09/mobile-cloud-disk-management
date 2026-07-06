@@ -35,6 +35,8 @@ RUN apk add --no-cache \
     tzdata \
     wget \
     curl \
+    mysql-client \
+    redis \
     && addgroup -S app \
     && adduser -S -G app app
 
@@ -49,6 +51,10 @@ RUN mkdir -p /app/logs /tmp/caiyun && chown -R app:app /app/logs /tmp/caiyun
 # Switch to non-root user
 USER app
 
+# Copy entrypoint script
+COPY --from=builder --chown=app:app /app/scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 # Expose API port
 EXPOSE 8080
 
@@ -56,5 +62,6 @@ EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
-# Run the API
+# Run the API via entrypoint
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["caiyun-api"]

@@ -22,6 +22,8 @@ chmod +x scripts/start.sh
 - 拉取/构建 Docker 镜像
 - 启动所有服务（MySQL、Redis、API、Worker、Frontend、Grafana）
 - 执行健康检查
+- **自动创建默认管理员账号（admin / admin123）**
+- **打印访问地址和默认账号密码**
 
 ### 方式二：Docker Compose 手动启动
 
