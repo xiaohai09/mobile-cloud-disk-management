@@ -142,19 +142,37 @@ type Hub struct {
 var globalHub *Hub
 var hubOnce sync.Once
 
+// NewHub 创建一个新的 Hub 实例，便于测试创建独立实例。
+func NewHub() *Hub {
+	return &Hub{
+		clients:    make(map[uint]map[*Client]bool),
+		register:   make(chan *Client, 64),
+		unregister: make(chan *Client, 64),
+		stopCh:     make(chan struct{}),
+		offlineSem: make(chan struct{}, 4),
+	}
+}
+
 // GetHub 获取全局Hub实例
 func GetHub() *Hub {
 	hubOnce.Do(func() {
-		globalHub = &Hub{
-			clients:    make(map[uint]map[*Client]bool),
-			register:   make(chan *Client, 64),
-			unregister: make(chan *Client, 64),
-			stopCh:     make(chan struct{}),
-			offlineSem: make(chan struct{}, 4),
-		}
+		globalHub = NewHub()
 		go globalHub.run()
 	})
 	return globalHub
+}
+
+// SetGlobalHubForTest 替换全局 Hub 为测试实例，避免 GetHub 重复初始化。
+// 注意：调用后请勿在生产流程中继续使用该实例。
+func SetGlobalHubForTest(h *Hub) {
+	globalHub = h
+}
+
+// ResetGlobalHubForTest 重置全局单例状态，使下一次 GetHub 可创建全新实例。
+// 仅限测试环境使用。
+func ResetGlobalHubForTest() {
+	globalHub = nil
+	hubOnce = sync.Once{}
 }
 
 // Stop 停止 Hub 主循环并关闭所有客户端连接。通常在 API 进程优雅退出时调用。
