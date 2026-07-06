@@ -102,3 +102,12 @@ services:
         limits:
           memory: 128m
           cpus: "0.25"
+
+volumes:
+  mysql-data:
+  redis-data:
+  grafana-data:
+
+networks:
+  caiyun-network:
+    driver: bridge

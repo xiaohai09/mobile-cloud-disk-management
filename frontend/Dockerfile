@@ -22,13 +22,3 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy built assets from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Expose HTTP port
-EXPOSE 8080
-
-# Health check
-HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/ || exit 1
-
-# Run nginx
-CMD ["nginx", "-g", "daemon off;"]
