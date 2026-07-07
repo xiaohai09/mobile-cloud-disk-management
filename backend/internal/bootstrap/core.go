@@ -100,11 +100,11 @@ func InitCore() (*Core, error) {
 	})
 	if err != nil {
 		_ = closeGormDB(db)
-		return nil, fmt.Errorf("Redis 连接失败: %w", err)
+		return nil, fmt.Errorf("redis 连接失败: %w", err)
 	}
 	if redisCache == nil {
 		_ = closeGormDB(db)
-		return nil, fmt.Errorf("Redis 连接失败: 缓存实例为空")
+		return nil, fmt.Errorf("redis 连接失败: 缓存实例为空")
 	}
 
 	crypto, err := utils.NewCryptoFromEnv()
