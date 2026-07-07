@@ -3,6 +3,15 @@ run:
   timeout: 5m
   issues-exit-code: 1
 
+linters-settings:
+  dupl:
+    threshold: 200
+  goconst:
+    min-occurrences: 5
+  funlen:
+    lines: 120
+    statements: 60
+
 linters:
   enable:
     - errcheck
