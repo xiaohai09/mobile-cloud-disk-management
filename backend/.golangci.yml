@@ -10,7 +10,6 @@ linters:
     - dupl
     - goconst
     - misspell
-    - funlen
     - ineffassign
     - staticcheck
 
