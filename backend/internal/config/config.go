@@ -1,6 +1,7 @@
 package config
 
 import (
+	"os"
 	"strconv"
 	"strings"
 )
@@ -70,7 +71,7 @@ type SecurityConfig struct {
 	CorsOrigins   []string
 }
 
-// Load 从环境变量加载配置（复用 bootstrap.GetEnv）
+// Load 从环境变量加载配置（兼容 bootstrap.GetEnv 语义）
 func Load() (*Config, error) {
 	cfg := &Config{
 		App: AppConfig{
@@ -126,50 +127,14 @@ func Load() (*Config, error) {
 }
 
 func getEnv(key, defaultValue string) string {
-	if v := strings.TrimSpace(getEnvRaw(key)); v != "" {
+	if v := strings.TrimSpace(os.Getenv(key)); v != "" {
 		return v
 	}
 	return defaultValue
 }
 
-func getEnvRaw(key string) string {
-	for _, envKey := range []string{key, strings.ToLower(key), strings.ReplaceAll(strings.ToUpper(key), "_", "")} {
-		if v := lookupEnv(envKey); v != "" {
-			return v
-		}
-	}
-	return ""
-}
-
-func lookupEnv(key string) string {
-	for _, kv := range lookupEnvAll() {
-		if strings.EqualFold(ks(kv), key) {
-			return vv(kv)
-		}
-	}
-	return ""
-}
-
-func lookupEnvAll() []string {
-	return nil // fallback to single lookup
-}
-
-func ks(kv string) string {
-	if i := strings.Index(kv, "="); i >= 0 {
-		return kv[:i]
-	}
-	return kv
-}
-
-func vv(kv string) string {
-	if i := strings.Index(kv, "="); i >= 0 {
-		return kv[i+1:]
-	}
-	return ""
-}
-
 func getIntEnv(key string, defaultValue int) int {
-	v := getEnv(key, "")
+	v := strings.TrimSpace(os.Getenv(key))
 	if v == "" {
 		return defaultValue
 	}
@@ -180,7 +145,7 @@ func getIntEnv(key string, defaultValue int) int {
 }
 
 func getInt64Env(key string, defaultValue int64) int64 {
-	v := getEnv(key, "")
+	v := strings.TrimSpace(os.Getenv(key))
 	if v == "" {
 		return defaultValue
 	}
@@ -191,7 +156,7 @@ func getInt64Env(key string, defaultValue int64) int64 {
 }
 
 func getStringSliceEnv(key string, defaultValue []string) []string {
-	v := getEnv(key, "")
+	v := strings.TrimSpace(os.Getenv(key))
 	if v == "" {
 		return defaultValue
 	}
