@@ -54,7 +54,7 @@ jobs:
       - name: Build and push API image
         uses: docker/build-push-action@v5
         with:
-          context: ./backend
+          context: .
           file: Dockerfile.api
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/mobile-cloud-disk-management-api:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/mobile-cloud-disk-management-api:latest
@@ -65,7 +65,7 @@ jobs:
       - name: Build and push Worker image
         uses: docker/build-push-action@v5
         with:
-          context: ./backend
+          context: .
           file: Dockerfile.worker
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/mobile-cloud-disk-management-worker:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/mobile-cloud-disk-management-worker:latest
