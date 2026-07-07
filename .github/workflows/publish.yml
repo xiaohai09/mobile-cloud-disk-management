@@ -28,6 +28,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Debug workspace files
+        run: |
+          echo "=== Root files ==="
+          ls -la
+          echo "=== Backend files ==="
+          ls -la backend/ || echo "No backend dir"
+          echo "=== Frontend files ==="
+          ls -la frontend/ || echo "No frontend dir"
+          echo "=== Git status ==="
+          git status --short
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
