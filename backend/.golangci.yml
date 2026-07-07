@@ -37,7 +37,6 @@ linters:
     - funlen
     - ineffassign
     - staticcheck
-    - unused
 
 issues:
   max-same-issues: 0
