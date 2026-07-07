@@ -101,10 +101,17 @@ function safeRedirect(value: unknown): string {
 
 router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
+  const isProtectedRoute = to.meta.requiresAuth
+  const isAuthPage = to.name === 'Login' || to.name === 'Register'
   const shouldProbeSession = !authStore.hasCheckedSession
-    && (to.meta.requiresAuth || to.name === 'Login' || to.name === 'Register')
-  
-  if (shouldProbeSession) {
+    && (isProtectedRoute || isAuthPage)
+
+  // 周期性重验证：已认证但上次验证超过 5 分钟，重新探测会话，避免 Cookie 过期后仍保持登录态。
+  const shouldRevalidate = isProtectedRoute
+    && authStore.isAuthenticated
+    && (!authStore.lastVerified || Date.now() - authStore.lastVerified > 5 * 60 * 1000)
+
+  if (shouldProbeSession || shouldRevalidate) {
     try {
       await authStore.refreshProfile()
     } catch {

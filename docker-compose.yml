@@ -68,7 +68,9 @@ services:
   backend-api:
     build:
       context: ./backend
-      dockerfile: Dockerfile.api
+      dockerfile: Dockerfile
+      args:
+        TARGET: api
     container_name: caiyun-api
     restart: unless-stopped
     logging:
@@ -126,7 +128,9 @@ services:
   backend-worker:
     build:
       context: ./backend
-      dockerfile: Dockerfile.worker
+      dockerfile: Dockerfile
+      args:
+        TARGET: worker
     container_name: caiyun-worker
     restart: unless-stopped
     logging:

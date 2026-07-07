@@ -712,14 +712,19 @@ func sendSMTPMail(config SMTPConfig, from string, to []string, msg []byte) error
 	}
 	defer client.Quit()
 
-	if ok, _ := client.Extension("STARTTLS"); ok {
-		if err := client.StartTLS(&tls.Config{
-			ServerName: config.Host,
-			MinVersion: tls.VersionTLS12,
-		}); err != nil {
-			return err
+	if !config.UseTLS {
+		if ok, _ := client.Extension("STARTTLS"); ok {
+			if err := client.StartTLS(&tls.Config{
+				ServerName: config.Host,
+				MinVersion: tls.VersionTLS12,
+			}); err != nil {
+				return err
+			}
+		} else {
+			return fmt.Errorf("SMTP 服务器不支持 STARTTLS，禁止发送凭证: %s", addr)
 		}
 	}
+
 	if auth != nil {
 		if ok, _ := client.Extension("AUTH"); ok {
 			if err := client.Auth(auth); err != nil {

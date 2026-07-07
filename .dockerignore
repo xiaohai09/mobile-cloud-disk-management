@@ -1,0 +1,38 @@
+# Dependencies and build artifacts
+node_modules
+frontend/node_modules
+backend/vendor
+
+# Environment and secrets
+.env
+.env.*
+
+# Git
+.git
+.gitignore
+
+# IDE and OS
+.idea
+.vscode
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Build outputs
+dist
+tmp/
+tmp
+*.log
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+
+# Documentation
+docs/
+
+# Local data (never include volumes or DB state)
+*.sql
+*.sqlite
+*.db

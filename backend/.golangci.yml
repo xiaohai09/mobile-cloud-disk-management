@@ -1,0 +1,46 @@
+version: 2
+run:
+  timeout: 5m
+  issues-exit-code: 1
+
+output:
+  format: colored-line-number
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+  govet:
+    check-shadowing: true
+    enable-all: true
+  gocyclo:
+    min-complexity: 15
+  dupl:
+    threshold: 100
+  goconst:
+    min-occurrences: 3
+  misspell:
+    locale: US
+  funlen:
+    lines: 80
+    statements: 40
+
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - govet
+    - gofmt
+    - gocyclo
+    - dupl
+    - goconst
+    - misspell
+    - funlen
+    - ineffassign
+    - staticcheck
+    - unused
+    - typecheck
+
+issues:
+  exclude-use-default: false
+  max-same-issues: 0

@@ -101,7 +101,12 @@ func (s *ExchangeScheduler) executeProductGroup(prizeID string, tasks []*models.
 		utils.SafeGo("exchange:task:"+fmt.Sprintf("%d", task.ID), func() {
 			defer wg.Done()
 
-			accountName := exchangeAccountName(&task.ExchangeAccount)
+			if s.isStopped() {
+				log.Printf("【抢兑调度器】任务 %d 跳过执行，调度器已停止", task.ID)
+				recordFailureReason("调度器已停止")
+				s.finalizeTaskResult(task, false, "调度器已停止", 0)
+				return
+			}
 			if accountName == "" {
 				accountName = fmt.Sprintf("exchange-account-%d", task.ExchangeAccountID)
 			}

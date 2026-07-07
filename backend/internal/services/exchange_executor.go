@@ -22,6 +22,7 @@ import (
 
 const (
 	exchangeRequestTimeout   = time.Minute
+	exchangeDeviceFetchTimeout = 12 * time.Second
 	exchangeClientVersion    = "13.0.0"
 	exchangeAppVersion       = exchangeClientVersion + ".0"
 	exchangeActivityID       = "sign_in_3"
@@ -211,7 +212,7 @@ func newExchangeHTTPSession(account *models.ExchangeAccount, authCtx *exchangeAu
 
 	userAgent := shumei.RandomMarketUserAgent()
 	deviceID := exchangeFallbackDeviceID
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), exchangeDeviceFetchTimeout)
 	if fetchedDeviceID, err := shumei.FetchDeviceID(ctx, client, ""); err == nil && strings.TrimSpace(fetchedDeviceID) != "" {
 		deviceID = fetchedDeviceID
 	}

@@ -97,16 +97,10 @@ export function getDashboard(): Promise<DashboardData> {
     account_ranking: []
   }
 
-  return request<{ data: DashboardData } | ApiResponse<DashboardData>>({
+  return request<DashboardData | ApiResponse<DashboardData>>({
     url: '/api/stats/dashboard',
     method: 'get'
-  }).then((res) => {
-    const unified = unwrapApiData(res as ApiResponse<DashboardData>, fallback)
-    if ('total_cloud' in unified) {
-      return unified
-    }
-    return res?.data ?? fallback
-  })
+  }).then((res) => unwrapApiData(res, fallback))
 }
 
 // 获取云朵统计

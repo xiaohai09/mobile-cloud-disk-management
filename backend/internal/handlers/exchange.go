@@ -467,7 +467,7 @@ func (h *ExchangeHandler) ExecuteExchangeTask(c *gin.Context) {
 		return
 	}
 
-	err = h.exchangeService.ExecuteExchangeTask(uint(id), userID)
+	err = h.exchangeService.ExecuteExchangeTask(c.Request.Context(), uint(id), userID)
 	if err != nil {
 		respondError(c, http.StatusBadRequest, err.Error())
 		return
@@ -934,7 +934,7 @@ func (h *ExchangeHandler) ImmediateExchange(c *gin.Context) {
 	}
 
 	// 立即执行任务
-	go h.exchangeService.ExecuteExchangeTask(task.ID, userID)
+	go h.exchangeService.ExecuteExchangeTask(c.Request.Context(), task.ID, userID)
 
 	apiresponse.Success(c, ImmediateExchangeResponse{
 		Success: true,

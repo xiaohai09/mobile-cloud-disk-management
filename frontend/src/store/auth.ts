@@ -8,6 +8,7 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const token = ref<string>('') // 兼容旧调用；真实令牌由 HttpOnly Cookie 保存
   const hasCheckedSession = ref(false)
+  const lastVerified = ref(0) // 上次通过 /api/auth/me 成功验证的时间戳（秒）
   let refreshProfilePromise: Promise<User> | null = null
 
   const isAuthenticated = computed(() => !!user.value)
@@ -15,6 +16,7 @@ export const useAuthStore = defineStore('auth', () => {
   function clearAuthState(options: { sessionChecked?: boolean } = {}) {
     token.value = ''
     user.value = null
+    lastVerified.value = 0
     if (typeof options.sessionChecked === 'boolean') {
       hasCheckedSession.value = options.sessionChecked
     }
@@ -55,6 +57,7 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = me
         token.value = 'cookie'
         hasCheckedSession.value = true
+        lastVerified.value = Date.now()
         resetAuthExpiredState()
         localStorage.removeItem('user')
         return me

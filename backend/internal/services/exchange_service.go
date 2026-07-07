@@ -354,7 +354,7 @@ func (s *ExchangeService) DeleteExchangeTask(id uint, userID uint) error {
 }
 
 // ExecuteExchangeTask 执行抢兑任务 (立即执行)
-func (s *ExchangeService) ExecuteExchangeTask(taskID uint, userID uint) error {
+func (s *ExchangeService) ExecuteExchangeTask(ctx context.Context, taskID uint, userID uint) error {
 	task, err := s.exchangeTaskRepo.GetByID(taskID)
 	if err != nil {
 		return fmt.Errorf("任务不存在")
@@ -364,9 +364,9 @@ func (s *ExchangeService) ExecuteExchangeTask(taskID uint, userID uint) error {
 		return fmt.Errorf("无权操作该任务")
 	}
 
-	// 异步执行抢兑
+	// 异步执行抢兑，携带取消上下文
 	utils.SafeGo("exchange:single:"+fmt.Sprintf("%d", task.ID), func() {
-		s.executeSingleTask(task)
+		s.executeSingleTaskContext(ctx, task)
 	})
 
 	return nil
@@ -432,6 +432,14 @@ func (s *ExchangeService) BatchExecuteExchangeTasks(taskIDs []uint, userID uint)
 
 // executeSingleTask 执行单个抢兑任务（带重试机制）
 func (s *ExchangeService) executeSingleTask(task *models.ExchangeTask) {
+	s.executeSingleTaskContext(context.Background(), task)
+}
+
+// executeSingleTaskContext 执行单个抢兑任务，携带取消上下文。
+func (s *ExchangeService) executeSingleTaskContext(ctx context.Context, task *models.ExchangeTask) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	started, err := s.exchangeTaskRepo.TryMarkRunning(task.ID)
 	if err != nil {
 		log.Printf("【抢兑任务】任务 %d 抢占执行权失败: %v", task.ID, err)

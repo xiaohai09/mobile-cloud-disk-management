@@ -349,16 +349,10 @@ export function getAdminDashboard(): Promise<AdminDashboardData> {
     account_ranking: []
   }
 
-  return request<{ data: AdminDashboardData } | ApiResponse<AdminDashboardData>>({
+  return request<AdminDashboardData | ApiResponse<AdminDashboardData>>({
     url: '/api/admin/dashboard',
     method: 'get'
-  }).then((res) => {
-    const unified = unwrapApiData(res as ApiResponse<AdminDashboardData>, fallback)
-    if ('total_cloud' in unified) {
-      return unified
-    }
-    return res?.data ?? fallback
-  })
+  }).then((res) => unwrapApiData(res, fallback))
 }
 
 // 任务配置（管理员）
