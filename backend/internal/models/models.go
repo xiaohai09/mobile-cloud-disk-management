@@ -92,3 +92,50 @@ type TaskConfig struct {
 	UpdatedAt   time.Time      `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
 }
+
+// Permission 权限定义模型
+type Permission struct {
+	ID          uint      `gorm:"primarykey" json:"id"`
+	Name        string    `gorm:"size:100;not null" json:"name"`
+	Code        string    `gorm:"size:100;uniqueIndex;not null" json:"code"`
+	Module      string    `gorm:"size:50;not null;index" json:"module"`
+	Description string    `gorm:"size:255" json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+// TableName 指定表名
+func (Permission) TableName() string {
+	return "permissions"
+}
+
+// UserPermission 用户特有权限模型
+type UserPermission struct {
+	ID           uint      `gorm:"primarykey" json:"id"`
+	UserID       uint      `gorm:"not null;index" json:"user_id"`
+	PermissionID uint      `gorm:"not null;index" json:"permission_id"`
+	CreatedAt    time.Time `json:"created_at"`
+
+	User       User       `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	Permission Permission `gorm:"foreignKey:PermissionID" json:"permission,omitempty"`
+}
+
+// TableName 指定表名
+func (UserPermission) TableName() string {
+	return "user_permissions"
+}
+
+// RolePermission 角色权限映射模型
+type RolePermission struct {
+	ID           uint      `gorm:"primarykey" json:"id"`
+	Role         string    `gorm:"size:20;not null;index" json:"role"`
+	PermissionID uint      `gorm:"not null;index" json:"permission_id"`
+	CreatedAt    time.Time `json:"created_at"`
+
+	Permission Permission `gorm:"foreignKey:PermissionID" json:"permission,omitempty"`
+}
+
+// TableName 指定表名
+func (RolePermission) TableName() string {
+	return "role_permissions"
+}
