@@ -139,10 +139,8 @@ func buildTaskRunner(svc *TaskService, account *models.Account, storage tasks.St
 			ssoToken = matchedSSOToken
 			lastErr = nil
 			lg.Info("成功获取 JWT token")
-			account.JWTToken = token
 			// 成功获取后重置错误计数
 			if opts.updateJWTErrorStat && svc != nil && account.JWTErrorCount > 0 {
-				account.JWTErrorCount = 0
 				if err := svc.accountRepo.ResetJWTErrorCount(account.ID); err != nil {
 					lg.Error("重置账号JWT错误计数失败:", err)
 				}
@@ -173,12 +171,10 @@ func buildTaskRunner(svc *TaskService, account *models.Account, storage tasks.St
 			lg.Error("更新账号JWT错误计数失败:", err)
 			newCount = account.JWTErrorCount + 1
 		}
-		account.JWTErrorCount = newCount
-		lg.Error(fmt.Sprintf("JWT获取失败次数: %d/%d", account.JWTErrorCount, opts.maxJWTRetries))
+		lg.Error(fmt.Sprintf("JWT获取失败次数: %d/%d", newCount, opts.maxJWTRetries))
 
 		// 如果达到最大重试次数，禁用账号
-		if account.JWTErrorCount >= opts.maxJWTRetries {
-			account.IsActive = false
+		if newCount >= opts.maxJWTRetries {
 			lg.Error(fmt.Sprintf("账号 %s JWT获取失败超过3次，已自动禁用", account.Phone))
 			// 发送WebSocket通知
 			if wsHub := ws.GetHub(); wsHub != nil {

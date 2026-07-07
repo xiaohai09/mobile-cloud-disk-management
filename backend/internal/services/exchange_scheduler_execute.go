@@ -2,6 +2,7 @@ package services
 
 import (
 	"caiyun/internal/models"
+	"caiyun/internal/utils"
 	"caiyun/internal/ws"
 	"fmt"
 	"log"
@@ -209,7 +210,7 @@ func (s *ExchangeScheduler) executeProductGroup(prizeID string, tasks []*models.
 			}
 
 			s.finalizeTaskResult(task, success, message, execTime)
-		}()
+		})
 	}
 
 	wg.Wait()

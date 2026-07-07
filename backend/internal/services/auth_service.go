@@ -605,11 +605,11 @@ func (s *AuthService) verifyPasswordResetCode(username, email, code string) erro
 }
 
 func generateResetCode() (string, error) {
-	n, err := rand.Int(rand.Reader, big.NewInt(1000000))
+	n, err := rand.Int(rand.Reader, big.NewInt(100000000))
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%06d", n.Int64()), nil
+	return fmt.Sprintf("%08d", n.Int64()), nil
 }
 
 func (s *AuthService) sendPasswordResetEmail(to, username, code string) error {

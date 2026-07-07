@@ -28,6 +28,17 @@ class WebSocketClient {
     
     // 如果配置了完整URL则使用，否则使用当前host
     if (wsUrl.startsWith('ws://') || wsUrl.startsWith('wss://')) {
+      // 验证URL合法性：仅允许 ws:// 或 wss://，防止协议走私
+      try {
+        const parsed = new URL(wsUrl)
+        if (parsed.protocol !== 'ws:' && parsed.protocol !== 'wss:') {
+          console.error(`[WS] 非法协议: ${parsed.protocol}`)
+          return
+        }
+      } catch (e) {
+        console.error('[WS] 无效的 WebSocket URL:', e)
+        return
+      }
       this.url = wsUrl
     } else {
       // 相对路径，使用当前host

@@ -799,7 +799,7 @@ func (s *ExchangeService) ExecuteMonthlyExchange() {
 			defer func() { <-semaphore }()
 
 			// 执行月卡兑换
-			s.executeMonthlyExchangeForAccount(acc, monthlyCardPrizeID)
+			s.executeMonthlyExchangeForAccount(account, monthlyCardPrizeID)
 		})
 	}
 

@@ -45,7 +45,7 @@ service.interceptors.request.use(
     const method = (config.method || 'get').toLowerCase()
     if (['post', 'put', 'patch', 'delete'].includes(method)) {
       const csrfToken = getCookie('csrf_token')
-      if (csrfToken) {
+      if (csrfToken && validateCsrfToken(csrfToken)) {
         config.headers['X-CSRF-Token'] = csrfToken
       }
     }
@@ -64,6 +64,11 @@ function getCookie(name: string): string {
     .map(item => item.trim())
     .find(item => item.startsWith(prefix))
     ?.slice(prefix.length) || ''
+}
+
+function validateCsrfToken(token: string): boolean {
+  if (!token || token.length < 8) return false
+  return /^[a-zA-Z0-9_\-]+$/.test(token)
 }
 
 interface ErrorResponseBody {

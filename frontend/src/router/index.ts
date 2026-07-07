@@ -101,10 +101,9 @@ function safeRedirect(value: unknown): string {
 
 router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
-  const shouldProbeSession = !authStore.isAuthenticated
-    && !authStore.hasCheckedSession
+  const shouldProbeSession = !authStore.hasCheckedSession
     && (to.meta.requiresAuth || to.name === 'Login' || to.name === 'Register')
-
+  
   if (shouldProbeSession) {
     try {
       await authStore.refreshProfile()
