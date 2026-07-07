@@ -26,6 +26,17 @@ const (
 type TaskQueue struct {
 	cache redisQueueStore
 	ctx   context.Context
+	mu    sync.RWMutex
+}
+
+// SetContext 设置任务队列的上下文，用于 graceful shutdown 或链路追踪。
+func (q *TaskQueue) SetContext(ctx context.Context) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	q.mu.Lock()
+	q.ctx = ctx
+	q.mu.Unlock()
 }
 
 type redisQueueStore interface {
