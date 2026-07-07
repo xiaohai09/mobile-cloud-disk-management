@@ -365,8 +365,14 @@ func (s *ExchangeService) ExecuteExchangeTask(ctx context.Context, taskID uint, 
 	}
 
 	// 异步执行抢兑，携带取消上下文
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	childCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	utils.SafeGo("exchange:single:"+fmt.Sprintf("%d", task.ID), func() {
-		s.executeSingleTaskContext(ctx, task)
+		s.executeSingleTaskContext(childCtx, task)
 	})
 
 	return nil
