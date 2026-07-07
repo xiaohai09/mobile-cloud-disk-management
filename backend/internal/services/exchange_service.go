@@ -443,7 +443,8 @@ func (s *ExchangeService) executeSingleTask(task *models.ExchangeTask) {
 }
 
 // executeSingleTaskContext 执行单个抢兑任务，携带取消上下文。
-func (s *ExchangeService) executeSingleTaskContext(ctx context.Context, task *models.ExchangeTask) {
+func (s *ExchangeService) executeSingleTaskContext(inCtx context.Context, task *models.ExchangeTask) {
+	ctx := inCtx
 	if ctx == nil {
 		ctx = context.Background()
 	}
