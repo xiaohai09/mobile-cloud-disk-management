@@ -34,10 +34,10 @@ if [ ! -f .env ]; then
     cp .env.example .env
 
     # Generate strong random passwords
-    RANDOM_PASS=$(openssl rand -base64 32 | tr -d '/+=' | head -c 32)
-    RANDOM_JWT=$(openssl rand -base64 32 | tr -d '/+=' | head -c 32)
-    RANDOM_WORKER=$(openssl rand -base64 32 | tr -d '/+=' | head -c 32)
-    RANDOM_GRAFANA=$(openssl rand -base64 24 | tr -d '/+=' | head -c 24)
+    RANDOM_PASS=$(openssl rand -hex 32)
+    RANDOM_JWT=$(openssl rand -hex 32)
+    RANDOM_WORKER=$(openssl rand -hex 32)
+    RANDOM_GRAFANA=$(openssl rand -hex 24)
 
     # Replace placeholders
     if [[ "$(uname)" == "Darwin" ]]; then

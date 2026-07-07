@@ -1,15 +1,14 @@
 package auth
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"strconv"
+	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
-	"caiyun/internal/core/http"
-	"caiyun/internal/core/utils"
+	"caiyun/internal/constants"
 )
 
 // Auth 认证管理器
@@ -168,7 +167,8 @@ type SpecTokenResp struct {
 // QuerySpecToken 获取 SpecToken
 func (a *Auth) QuerySpecToken(phone string) (*SpecTokenResp, error) {
 	// 构建 SpecToken 请求 URL
-	url := fmt.Sprintf("https://caiyun.feixin.10086.cn/portal/auth/querySpecToken.action?phone=%s", phone)
+	url := fmt.Sprintf("https://caiyun.feixin.10086.cn/portal/auth/querySpecToken.action?phone=%s",
+		url.QueryEscape(phone))
 
 	resp, err := a.client.Get(url, nil)
 	if err != nil {
