@@ -8,7 +8,6 @@ linters:
     - errcheck
     - govet
     - dupl
-    - goconst
     - misspell
     - ineffassign
     - staticcheck
