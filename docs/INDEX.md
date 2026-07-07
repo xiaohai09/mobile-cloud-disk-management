@@ -1,36 +1,72 @@
-# 文档中心
+# 📚 Documentation Center
 
-欢迎查阅移动云盘管理系统的完整文档。所有文档均提供中英双语版本。
+Welcome to the **Mobile Cloud Disk Management System** documentation. All documents are available in both Chinese and English.
 
 ---
 
-## 文档列表
+## 📖 Documentation
 
-| 序号 | 中文文档 | English | 说明 |
-|------|---------|---------|------|
-| 1 | [项目概览](README.md) | [Overview](README.en.md) | 核心功能、快速开始、技术栈、验证记录 |
-| 2 | [部署指南](DEPLOYMENT.md) | [Deployment Guide](DEPLOYMENT.en.md) | 环境要求、一键部署、故障排查、生产建议 |
-| 3 | [API 文档](API.md) | [API Documentation](API.en.md) | 认证、导出 API、Webhook API、错误码、速率限制 |
-| 4 | [用户指南](USER_GUIDE.md) | [User Guide](USER_GUIDE.en.md) | 角色说明、功能模块、FAQ、技术支持 |
-| 5 | [测试报告](TEST_REPORT.md) | [Test Report](TEST_REPORT.en.md) | 构建验证、E2E 测试、Docker 验证、安全审计 |
-|| 6 | [贡献者指南](CONTRIBUTING.md) | [Contributing Guide](CONTRIBUTING.en.md) | 行为准则、开发规范、PR 流程、发布流程 |
-|| 7 | [优化对比清单](OPTIMIZATION.md) | [Optimization Comparison](OPTIMIZATION.en.md) | 安全加固、架构优化、生产就绪、部署优化、性能基准 |
+| # | 🇨🇳 Chinese | 🇺🇸 English | Description |
+|---|------------|------------|-------------|
+| 1 | [Project Overview](README.md) | [Overview](README.en.md) | Core features, quick start, tech stack, verification records |
+| 2 | [Deployment Guide](DEPLOYMENT.md) | [Deployment Guide](DEPLOYMENT.en.md) | Environment requirements, one-click deployment, troubleshooting, production recommendations |
+| 3 | [API Documentation](API.md) | [API Documentation](API.en.md) | Authentication, export API, Webhook API, error codes, rate limiting |
+| 4 | [User Guide](USER_GUIDE.md) | [User Guide](USER_GUIDE.en.md) | Role descriptions, feature modules, FAQ, technical support |
+| 5 | [Test Report](TEST_REPORT.md) | [Test Report](TEST_REPORT.en.md) | Build verification, E2E testing, Docker verification, security audit |
+| 6 | [Contributing Guide](CONTRIBUTING.md) | [Contributing Guide](CONTRIBUTING.en.md) | Code of conduct, development standards, PR process, release process |
+| 7 | [Optimization Comparison](OPTIMIZATION.md) | [Optimization Comparison](OPTIMIZATION.en.md) | Security hardening, architecture optimization, production readiness, deployment optimization, performance benchmarks |
 
-## 语言切换
+---
 
-- **默认语言**：中文（`.md` 文件）
-- **英文版本**：`.en.md` 后缀文件
-- **切换方式**：直接点击上方表格中的对应链接即可
+## 🌐 Language Switching
 
-## 快速访问
+- **Default Language**: Chinese (`.md` files)
+- **English Version**: Files with `.en.md` suffix
+- **How to Switch**: Click the corresponding link in the table above
 
-- **GitHub 仓库**：https://github.com/xiaohai09/mobile-cloud-disk-management
-- **问题反馈**：https://github.com/xiaohai09/mobile-cloud-disk-management/issues
-- **CI/CD 状态**：https://github.com/xiaohai09/mobile-cloud-disk-management/actions
-- **Docker 镜像**：https://github.com/xiaohai09/mobile-cloud-disk-management/actions/workflows/publish.yml
+---
 
-## 文档维护
+## 🔗 Quick Links
 
-本文档由 AI 自动维护。如需更新或修正文档内容，请提交 Pull Request。
+- **GitHub Repository**: https://github.com/xiaohai09/mobile-cloud-disk-management
+- **Issue Tracker**: https://github.com/xiaohai09/mobile-cloud-disk-management/issues
+- **CI/CD Status**: https://github.com/xiaohai09/mobile-cloud-disk-management/actions
+- **Docker Images**: https://github.com/xiaohai09/mobile-cloud-disk-management/actions/workflows/publish.yml
+- **Security Advisories**: https://github.com/xiaohai09/mobile-cloud-disk-management/security/advisories
 
-For questions or suggestions, please open an issue on GitHub.
+---
+
+## 📋 Document Standards
+
+All documentation follows these standards:
+
+- **Structure**: Consistent heading hierarchy and formatting
+- **Completeness**: Comprehensive coverage of features, configuration, and troubleshooting
+- **Examples**: Practical code examples and configuration snippets
+- **Maintenance**: Regularly updated to reflect latest changes
+- **Accessibility**: Clear language, logical organization, searchable content
+
+---
+
+## 🤝 Contributing to Documentation
+
+Found an error or want to improve the documentation? Please:
+
+1. Fork this repository
+2. Edit the relevant document
+3. Ensure consistency across Chinese and English versions
+4. Submit a Pull Request
+
+For major changes, please open an issue first to discuss the proposed changes.
+
+---
+
+## 📞 Support
+
+- **General Questions**: [GitHub Discussions](https://github.com/xiaohai09/mobile-cloud-disk-management/discussions)
+- **Bug Reports**: [GitHub Issues](https://github.com/xiaohai09/mobile-cloud-disk-management/issues)
+- **Security Issues**: [GitHub Security Advisories](https://github.com/xiaohai09/mobile-cloud-disk-management/security/advisories)
+
+---
+
+*Last updated: 2026-07-07*
