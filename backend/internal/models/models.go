@@ -14,6 +14,7 @@ type User struct {
 	Email        string         `gorm:"size:100" json:"email"`
 	Role         string         `gorm:"default:'user';size:10" json:"role"` // user, admin
 	TokenVersion int            `gorm:"not null;default:0" json:"-"`
+	RefreshSessions string         `gorm:"type:text" json:"-"` // refresh token 黑名单（JSON 哈希列表）
 	CreatedAt    time.Time      `json:"created_at"`
 	UpdatedAt    time.Time      `json:"updated_at"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
