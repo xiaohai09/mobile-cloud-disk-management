@@ -445,9 +445,6 @@ func (s *ExchangeService) executeSingleTask(task *models.ExchangeTask) {
 // executeSingleTaskContext 执行单个抢兑任务，携带取消上下文。
 func (s *ExchangeService) executeSingleTaskContext(ctx context.Context, task *models.ExchangeTask) {
 
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	started, err := s.exchangeTaskRepo.TryMarkRunning(task.ID)
 	if err != nil {
 		log.Printf("【抢兑任务】任务 %d 抢占执行权失败: %v", task.ID, err)
