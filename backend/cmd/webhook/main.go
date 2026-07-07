@@ -56,17 +56,14 @@ func runWebhookWorkerLoop(webhookService *services.WebhookService, pollInterval 
 	defer ticker.Stop()
 
 	// 立即执行一次
-	processWebhookDeliveries(webhookService, recentLimit)
+	processWebhookDeliveries(webhookService)
 
 	for range ticker.C {
-		processWebhookDeliveries(webhookService, recentLimit)
+		processWebhookDeliveries(webhookService)
 	}
 }
 
-func processWebhookDeliveries(webhookService *services.WebhookService, recentLimit int) {
-	if recentLimit <= 0 {
-		recentLimit = 20
-	}
+func processWebhookDeliveries(webhookService *services.WebhookService) {
 
 	// 查询近期需要处理的 webhook deliveries
 	// 这里复用 DeliveryRepository.GetRecentByUser 来获取需要处理的记录
