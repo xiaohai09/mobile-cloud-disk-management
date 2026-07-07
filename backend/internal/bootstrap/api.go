@@ -116,6 +116,12 @@ func BootstrapAPI() *BootstrapResult {
 	log.Printf("任务队列后端: %s", TaskQueueBackendName())
 
 	adminService := services.NewAdminService(repos.User, repos.Account, repos.TaskLog, repos.TaskConfig)
+
+	// 初始化默认管理员账号（仅当不存在时创建）
+	if err := SeedDefaultAdmin(core.Repository); err != nil {
+		log.Printf("[admin] 初始化默认管理员失败: %v", err)
+	}
+
 	productService := services.NewProductService(repos.Product, repos.Account)
 	announcementService := services.NewAnnouncementService(repos.Announcement)
 	exportService := services.NewExportService(
