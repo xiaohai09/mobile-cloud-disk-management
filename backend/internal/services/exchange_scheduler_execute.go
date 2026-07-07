@@ -97,6 +97,7 @@ func (s *ExchangeScheduler) executeProductGroup(prizeID string, tasks []*models.
 			continue
 		}
 		task := task
+		accountName := ""
 		wg.Add(1)
 		utils.SafeGo("exchange:task:"+fmt.Sprintf("%d", task.ID), func() {
 			defer wg.Done()
