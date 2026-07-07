@@ -51,8 +51,10 @@ services:
       - redis-data:/data
     networks:
       - caiyun-network
+    environment:
+      REDIS_REQUIRE_AUTH: "true"
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli ping < /dev/null || redis-cli -a $$REDIS_PASSWORD ping"]
+      test: ["CMD-SHELL", "redis-cli ping < /dev/null || redis-cli -a $REDIS_PASSWORD ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -89,6 +91,7 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
       TASK_QUEUE_BACKEND: ${TASK_QUEUE_BACKEND:-list}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}

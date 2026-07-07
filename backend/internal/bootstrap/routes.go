@@ -42,6 +42,9 @@ func registerAuthRoutes(r *gin.Engine, authHandler *handlers.AuthHandler) {
 	{
 		public.POST("/register", authHandler.Register)
 		public.POST("/login", authHandler.Login)
+		public.POST("/refresh", authHandler.RefreshToken)
+		public.POST("/logout", authHandler.Logout)
+		public.GET("/me", authHandler.GetCurrentUser)
 		public.POST("/password/reset-code/send", authHandler.SendPasswordResetCode)
 		public.POST("/password/reset", authHandler.ResetPassword)
 	}
@@ -62,11 +65,25 @@ func registerProtectedRoutes(r *gin.Engine, deps RouteDependencies) {
 		api.PUT("/accounts/:id", h.Account.UpdateAccount)
 		api.DELETE("/accounts/:id", h.Account.DeleteAccount)
 		api.POST("/accounts/:id/task", h.Account.TriggerTask)
+		api.PUT("/accounts/:id/status", h.Account.SetAccountStatus)
+		api.POST("/accounts/:id/refresh", h.Account.RefreshToken)
+		api.POST("/accounts/:id/trigger", h.Account.TriggerTask)
+		api.POST("/accounts/sms/send", h.Account.SendSmsCode)
+		api.GET("/accounts/sms/status/:phone", h.Account.GetSmsStatus)
+		api.POST("/accounts/sms/verify", h.Account.SmsLogin)
 
+		api.GET("/tasks/logs", h.Task.GetTaskLogs)
 		api.GET("/tasks", h.Task.GetTaskLogs)
 		api.GET("/tasks/:id", h.Task.GetTaskLogs)
+		api.POST("/tasks/trigger-all", h.Task.TriggerAllTasks)
 		api.GET("/tasks/status", h.Task.GetTaskStatus)
 		api.GET("/queue/status", h.Task.GetQueueStatus)
+
+		api.GET("/stats/dashboard", h.Task.GetDashboard)
+		api.GET("/stats/cloud", h.Task.GetCloudStats)
+		api.GET("/stats/trend", h.Task.GetTrendData)
+		api.POST("/stats/calculate", h.Task.CalculateStats)
+		api.GET("/stats/total-cloud", h.Task.GetTotalCloudCount)
 
 		api.GET("/announcements", h.Announcement.GetPublishedAnnouncements)
 
@@ -87,11 +104,18 @@ func registerAdminRoutes(r *gin.Engine, deps RouteDependencies) {
 	)
 	{
 		admin.GET("/users", h.Admin.GetAllUsers)
-		admin.POST("/users", h.Admin.GetAllUsers)
 		admin.PUT("/users/:id", h.Admin.UpdateUserRole)
 		admin.DELETE("/users/:id", h.Admin.DeleteUser)
-		admin.GET("/stats", h.Admin.GetStatsOverview)
+		admin.GET("/accounts", h.Admin.GetAllAccounts)
+		admin.GET("/accounts/search", h.Admin.SearchAllAccounts)
+		admin.GET("/accounts/summaries", h.Admin.GetAccountSummaries)
+		admin.PUT("/accounts/:id/status", h.Admin.UpdateAccountStatus)
+		admin.DELETE("/accounts/:id", h.Admin.DeleteAccount)
+		admin.GET("/dashboard", h.Admin.GetAdminDashboard)
+		admin.GET("/stats/overview", h.Admin.GetStatsOverview)
 		admin.GET("/audit-logs", h.Admin.GetStatsOverview)
+		admin.GET("/task-definitions", h.Admin.GetTaskConfigs)
+		admin.PATCH("/task-definitions/:id", h.Admin.UpdateTaskConfig)
 	}
 }
 
