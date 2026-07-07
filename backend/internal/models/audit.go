@@ -16,6 +16,7 @@ type AuditLog struct {
 	Path         string    `gorm:"size:500" json:"path"`                     // 请求路径
 	IP           string    `gorm:"size:50" json:"ip"`                        // 客户端IP
 	UserAgent    string    `gorm:"size:500" json:"user_agent"`               // 用户代理
+	RequestID    string    `gorm:"size:100" json:"request_id,omitempty"`     // 请求ID
 	RequestData  string    `gorm:"type:text" json:"request_data,omitempty"`  // 请求数据(JSON)
 	ResponseData string    `gorm:"type:text" json:"response_data,omitempty"` // 响应数据(JSON)
 	StatusCode   int       `gorm:"default:0" json:"status_code"`             // HTTP状态码

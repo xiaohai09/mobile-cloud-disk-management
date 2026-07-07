@@ -177,6 +177,7 @@ func AuditMiddleware(auditRepo *repository.AuditLogRepository) gin.HandlerFunc {
 			Path:         c.Request.URL.Path,
 			IP:           c.ClientIP(),
 			UserAgent:    c.Request.UserAgent(),
+			RequestID:    c.GetString("X-Request-ID"),
 			RequestData:  truncateString(redactAuditPayload(requestBody), 2000),
 			ResponseData: truncateString(redactAuditPayload(blw.body.Bytes()), 2000),
 			StatusCode:   c.Writer.Status(),

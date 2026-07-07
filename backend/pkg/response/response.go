@@ -15,6 +15,16 @@ type Response struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
+// getTraceID 从 Gin context 中获取请求 ID。
+func getTraceID(c *gin.Context) string {
+	if id, exists := c.Get("X-Request-ID"); exists {
+		if s, ok := id.(string); ok {
+			return s
+		}
+	}
+	return ""
+}
+
 // PageData 分页数据
 type PageData struct {
 	List     interface{} `json:"list"`
@@ -64,99 +74,111 @@ func Error(c *gin.Context, err error) {
 	// 检查是否是 AppError
 	var appErr appErrors.AppError
 	if stderrors.As(err, &appErr) {
-		c.JSON(appErr.Code(), Response{
-			Code:    appErr.Code(),
-			Message: appErr.Message(),
+		c.JSON(appErr.Code(), gin.H{
+			"code":    appErr.Code(),
+			"message": appErr.Message(),
+			"trace_id": getTraceID(c),
 		})
 		return
 	}
 
 	// 普通 error：客户端只看到通用消息，详细信息写入 gin context 供审计中间件记录。
 	recordInternalError(c, err)
-	c.JSON(http.StatusInternalServerError, Response{
-		Code:    http.StatusInternalServerError,
-		Message: genericInternalMessage,
+	c.JSON(http.StatusInternalServerError, gin.H{
+		"code":     http.StatusInternalServerError,
+		"message":  genericInternalMessage,
+		"trace_id": getTraceID(c),
 	})
 }
 
 // ErrorWithCode 指定错误码的错误响应
 func ErrorWithCode(c *gin.Context, code int, message string) {
-	c.JSON(code, Response{
-		Code:    code,
-		Message: message,
+	c.JSON(code, gin.H{
+		"code":     code,
+		"message":  message,
+		"trace_id": getTraceID(c),
 	})
 }
 
 // ErrorWithData 指定错误码并附带结构化错误上下文。
 func ErrorWithData(c *gin.Context, code int, message string, data interface{}) {
-	c.JSON(code, Response{
-		Code:    code,
-		Message: message,
-		Data:    data,
+	c.JSON(code, gin.H{
+		"code":     code,
+		"message":  message,
+		"data":     data,
+		"trace_id": getTraceID(c),
 	})
 }
 
 // BadRequest 400 错误
 func BadRequest(c *gin.Context, message string) {
-	c.JSON(http.StatusBadRequest, Response{
-		Code:    http.StatusBadRequest,
-		Message: message,
+	c.JSON(http.StatusBadRequest, gin.H{
+		"code":     http.StatusBadRequest,
+		"message":  message,
+		"trace_id": getTraceID(c),
 	})
 }
 
 // Unauthorized 401 错误
 func Unauthorized(c *gin.Context, message string) {
-	c.JSON(http.StatusUnauthorized, Response{
-		Code:    http.StatusUnauthorized,
-		Message: message,
+	c.JSON(http.StatusUnauthorized, gin.H{
+		"code":     http.StatusUnauthorized,
+		"message":  message,
+		"trace_id": getTraceID(c),
 	})
 }
 
 // Forbidden 403 错误
 func Forbidden(c *gin.Context, message string) {
-	c.JSON(http.StatusForbidden, Response{
-		Code:    http.StatusForbidden,
-		Message: message,
+	c.JSON(http.StatusForbidden, gin.H{
+		"code":     http.StatusForbidden,
+		"message":  message,
+		"trace_id": getTraceID(c),
 	})
 }
 
 // NotFound 404 错误
 func NotFound(c *gin.Context, message string) {
-	c.JSON(http.StatusNotFound, Response{
-		Code:    http.StatusNotFound,
-		Message: message,
+	c.JSON(http.StatusNotFound, gin.H{
+		"code":     http.StatusNotFound,
+		"message":  message,
+		"trace_id": getTraceID(c),
 	})
 }
 
 // Conflict 409 错误
 func Conflict(c *gin.Context, message string) {
-	c.JSON(http.StatusConflict, Response{
-		Code:    http.StatusConflict,
-		Message: message,
+	c.JSON(http.StatusConflict, gin.H{
+		"code":     http.StatusConflict,
+		"message":  message,
+		"trace_id": getTraceID(c),
 	})
 }
 
 // InternalServer 500 错误
 func InternalServer(c *gin.Context, message string) {
-	c.JSON(http.StatusInternalServerError, Response{
-		Code:    http.StatusInternalServerError,
-		Message: message,
+	c.JSON(http.StatusInternalServerError, gin.H{
+		"code":     http.StatusInternalServerError,
+		"message":  message,
+		"trace_id": getTraceID(c),
 	})
 }
 
 // ServiceUnavailable 503 错误
 func ServiceUnavailable(c *gin.Context, message string) {
-	c.JSON(http.StatusServiceUnavailable, Response{
-		Code:    http.StatusServiceUnavailable,
-		Message: message,
+	c.JSON(http.StatusServiceUnavailable, gin.H{
+		"code":     http.StatusServiceUnavailable,
+		"message":  message,
+		"trace_id": getTraceID(c),
 	})
 }
 
 // Timeout 504 错误
 func Timeout(c *gin.Context, message string) {
-	c.JSON(http.StatusGatewayTimeout, Response{
-		Code:    http.StatusGatewayTimeout,
-		Message: message,
+	c.JSON(http.StatusGatewayTimeout, gin.H{
+		"code":     http.StatusGatewayTimeout,
+		"message":  message,
+		"trace_id": getTraceID(c),
 	})
 }
 
@@ -229,18 +251,20 @@ func HandleAppError(c *gin.Context, err error) {
 
 	var appErr appErrors.AppError
 	if stderrors.As(err, &appErr) {
-		c.JSON(appErr.Code(), Response{
-			Code:    appErr.Code(),
-			Message: appErr.Message(),
+		c.JSON(appErr.Code(), gin.H{
+			"code":    appErr.Code(),
+			"message": appErr.Message(),
+			"trace_id": getTraceID(c),
 		})
 		return
 	}
 
 	// 非 AppError：客户端只看到通用消息，详细信息记录到 gin context。
 	recordInternalError(c, err)
-	c.JSON(http.StatusInternalServerError, Response{
-		Code:    http.StatusInternalServerError,
-		Message: genericInternalMessage,
+	c.JSON(http.StatusInternalServerError, gin.H{
+		"code":     http.StatusInternalServerError,
+		"message":  genericInternalMessage,
+		"trace_id": getTraceID(c),
 	})
 }
 

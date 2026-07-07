@@ -24,7 +24,7 @@ func NewWebhookHandler(webhookService *services.WebhookService) *WebhookHandler 
 func (h *WebhookHandler) ListEndpoints(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		apiresponse.Unauthorized(c, "unauthorized")
 		return
 	}
 	uid, _ := userID.(uint)
@@ -56,14 +56,14 @@ func (h *WebhookHandler) ListEndpoints(c *gin.Context) {
 func (h *WebhookHandler) CreateEndpoint(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		apiresponse.Unauthorized(c, "unauthorized")
 		return
 	}
 	uid, _ := userID.(uint)
 
 	var req services.CreateEndpointRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		apiresponse.BadRequest(c, err.Error())
 		return
 	}
 	req.UserID = uid
@@ -81,20 +81,20 @@ func (h *WebhookHandler) CreateEndpoint(c *gin.Context) {
 func (h *WebhookHandler) UpdateEndpoint(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		apiresponse.Unauthorized(c, "unauthorized")
 		return
 	}
 	uid, _ := userID.(uint)
 
 	idUint, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid endpoint id"})
+		apiresponse.BadRequest(c, "invalid endpoint id")
 		return
 	}
 
 	var req services.UpdateEndpointRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		apiresponse.BadRequest(c, err.Error())
 		return
 	}
 
@@ -111,14 +111,14 @@ func (h *WebhookHandler) UpdateEndpoint(c *gin.Context) {
 func (h *WebhookHandler) DeleteEndpoint(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		apiresponse.Unauthorized(c, "unauthorized")
 		return
 	}
 	uid, _ := userID.(uint)
 
 	idUint, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid endpoint id"})
+		apiresponse.BadRequest(c, "invalid endpoint id")
 		return
 	}
 
@@ -134,14 +134,14 @@ func (h *WebhookHandler) DeleteEndpoint(c *gin.Context) {
 func (h *WebhookHandler) TestWebhook(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		apiresponse.Unauthorized(c, "unauthorized")
 		return
 	}
 	uid, _ := userID.(uint)
 
 	idUint, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid endpoint id"})
+		apiresponse.BadRequest(c, "invalid endpoint id")
 		return
 	}
 

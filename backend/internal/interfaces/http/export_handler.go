@@ -24,7 +24,7 @@ func NewExportHandler(exportService *services.ExportService) *ExportHandler {
 func (h *ExportHandler) ExportData(c *gin.Context) {
 	exportType := c.Query("type")
 	if exportType == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "type parameter is required"})
+		apiresponse.BadRequest(c, "type parameter is required")
 		return
 	}
 	format := c.Query("format")
@@ -32,13 +32,13 @@ func (h *ExportHandler) ExportData(c *gin.Context) {
 		format = "csv"
 	}
 	if format != "csv" && format != "json" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "format must be csv or json"})
+		apiresponse.BadRequest(c, "format must be csv or json")
 		return
 	}
 
 	userIDVal, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		apiresponse.Unauthorized(c, "unauthorized")
 		return
 	}
 	userID, _ := userIDVal.(uint)
@@ -78,7 +78,7 @@ func (h *ExportHandler) ExportData(c *gin.Context) {
 func (h *ExportHandler) GetExportHistory(c *gin.Context) {
 	userIDVal, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		apiresponse.Unauthorized(c, "unauthorized")
 		return
 	}
 	userID, _ := userIDVal.(uint)

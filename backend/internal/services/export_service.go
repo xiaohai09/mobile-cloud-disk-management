@@ -66,7 +66,7 @@ func (s *ExportService) ExportData(req *ExportRequest) (*ExportResult, error) {
 	}
 
 	go func(historyID uint) {
-		_ = s.executeExport(historyID, req)
+		_ = s.ExecuteExportJob(historyID, req)
 	}(history.ID)
 
 	return &ExportResult{
@@ -75,7 +75,8 @@ func (s *ExportService) ExportData(req *ExportRequest) (*ExportResult, error) {
 	}, nil
 }
 
-func (s *ExportService) executeExport(historyID uint, req *ExportRequest) error {
+// ExecuteExportJob executes an export job for an existing history record
+func (s *ExportService) ExecuteExportJob(historyID uint, req *ExportRequest) error {
 	_ = s.exportRepo.UpdateStatus(historyID, "processing", "", 0, "")
 
 	var filePath string

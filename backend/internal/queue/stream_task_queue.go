@@ -73,7 +73,36 @@ func StreamTaskQueueOptionsFromEnv() StreamTaskQueueOptions {
 		MaxLenApprox:  envInt64(streamMaxLenEnv, DefaultStreamMaxLenApprox),
 	}
 }
+// ExportStreamKey 导出任务专用 Redis Streams key
+const ExportStreamKey = "export:queue:stream"
+// ExportStreamDelayedKey 导出任务延迟 key
+const ExportStreamDelayedKey = "export:queue:stream:delayed"
+// ExportStreamDeadLetterKey 导出任务死信 key
+const ExportStreamDeadLetterKey = "export:queue:stream:dead"
+// WebhookStreamKey webhook 投递专用 Redis Streams key
+const WebhookStreamKey = "webhook:queue:stream"
+// WebhookStreamDelayedKey webhook 延迟 key
+const WebhookStreamDelayedKey = "webhook:queue:stream:delayed"
+// WebhookStreamDeadLetterKey webhook 死信 key
+const WebhookStreamDeadLetterKey = "webhook:queue:stream:dead"
 
+// ExportMessage 导出任务队列消息
+type ExportMessage struct {
+	ExportID uint   `json:"export_id"`
+	UserID   uint   `json:"user_id"`
+	Type     string `json:"type"`
+	Format   string `json:"format"`
+	Filters  string `json:"filters"`
+}
+
+// WebhookMessage webhook 投递队列消息
+type WebhookMessage struct {
+	EndpointID uint   `json:"endpoint_id"`
+	EventType  string `json:"event_type"`
+	Payload    string `json:"payload"`
+}
+
+// NewStreamTaskQueue 创建任务队列
 func NewStreamTaskQueue(redisCache *cache.RedisCache, opts StreamTaskQueueOptions) *StreamTaskQueue {
 	return newStreamTaskQueueWithStore(redisCache, opts)
 }

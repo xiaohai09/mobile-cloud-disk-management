@@ -105,6 +105,14 @@ func main() {
 		concurrencyLimit,
 	)
 
+	// 单进程模式下的 Export 和 Webhook Worker
+	if bootstrap.GetBoolEnv("ENABLE_EXPORT_WORKER", false) {
+		go runExportWorker(sharedServices.Export, core.Redis)
+	}
+	if bootstrap.GetBoolEnv("ENABLE_WEBHOOK_WORKER", false) {
+		go runWebhookWorker(sharedServices.Webhook, core.Redis)
+	}
+
 	// 添加定时任务（必须用 workerInstance，否则回调里 taskManager 为 nil 会 panic）
 	_, err = jobScheduler.AddJobWithName(
 		"daily_task_execution",

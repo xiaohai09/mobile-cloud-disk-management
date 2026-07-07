@@ -99,12 +99,18 @@ func registerWebSocketRoute(r *gin.Engine, deps RouteDependencies) {
 	r.GET("/ws", middleware.AuthMiddlewareWithUser(deps.JWTManager, deps.Repos.User), func(c *gin.Context) {
 		userIDVal, exists := c.Get("user_id")
 		if !exists {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"code": 401, "message": "invalid token"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"code": http.StatusUnauthorized, "message": "invalid token",
+				"trace_id": c.GetString("X-Request-ID"),
+			})
 			return
 		}
 		userID, ok := userIDVal.(uint)
 		if !ok {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"code": 401, "message": "invalid user"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"code": http.StatusUnauthorized, "message": "invalid user",
+				"trace_id": c.GetString("X-Request-ID"),
+			})
 			return
 		}
 		ws.GetHub().HandleWebSocket(c.Writer, c.Request, userID)

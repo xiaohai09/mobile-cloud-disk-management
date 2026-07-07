@@ -26,12 +26,14 @@ func RecoveryWithLogger() gin.HandlerFunc {
 		defer func() {
 			if rec := recover(); rec != nil {
 				stack := debug.Stack()
-				log.Printf("[PANIC] %s %s panic: %v\n%s",
-					c.Request.Method, c.Request.URL.Path, rec, stack)
+				traceID := c.GetString("X-Request-ID")
+				log.Printf("[PANIC] %s %s trace_id=%s panic: %v\n%s",
+					c.Request.Method, c.Request.URL.Path, traceID, rec, stack)
 				if !c.Writer.Written() {
 					c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-						"code":    http.StatusInternalServerError,
-						"message": "服务器内部错误，请稍后再试",
+						"code":     http.StatusInternalServerError,
+						"message":  "服务器内部错误，请稍后再试",
+						"trace_id": traceID,
 					})
 				} else {
 					c.Abort()

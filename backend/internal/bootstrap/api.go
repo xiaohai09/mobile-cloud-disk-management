@@ -191,6 +191,7 @@ func BootstrapAPI() *BootstrapResult {
 	r := gin.New()
 	r.MaxMultipartMemory = 8 << 20 // 8 MiB
 	r.Use(middleware.RecoveryWithLogger())
+	r.Use(middleware.RequestIDMiddleware())
 	r.Use(middleware.BodySizeLimitMiddleware(10 << 20)) // 10 MiB
 	r.Use(middleware.CORSMiddleware())
 	r.Use(middleware.SecurityHeadersMiddleware())

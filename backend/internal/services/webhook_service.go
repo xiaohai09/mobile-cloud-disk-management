@@ -187,6 +187,11 @@ func (s *WebhookService) TriggerWebhook(userID uint, eventType string, payload m
 	return nil
 }
 
+// DeliverWebhookToEndpoint delivers a webhook to a specific endpoint
+func (s *WebhookService) DeliverWebhookToEndpoint(endpoint *models.WebhookEndpoint, eventType string, payload map[string]interface{}) error {
+	return s.deliverWebhook(endpoint, eventType, payload)
+}
+
 func (s *WebhookService) deliverWebhook(endpoint *models.WebhookEndpoint, eventType string, payload map[string]interface{}) error {
 	startTime := time.Now()
 	payloadBytes, _ := json.Marshal(payload)

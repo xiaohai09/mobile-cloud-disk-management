@@ -21,6 +21,8 @@ type SharedServices struct {
 	TokenManager *services.TokenManager
 	Exchange     *services.ExchangeService
 	TaskQueue    queue.ReliableTaskQueue
+	Export       *services.ExportService
+	Webhook      *services.WebhookService
 }
 
 func InitSharedServices(core *Core) (*SharedServices, error) {
@@ -57,6 +59,18 @@ func InitSharedServices(core *Core) (*SharedServices, error) {
 	)
 	exchangeService.SetLockStore(core.Redis)
 
+	exportService := services.NewExportService(
+		repos.ExportHistory,
+		repos.Account,
+		repos.TaskLog,
+		repos.ExchangeRecord,
+	)
+	webhookService := services.NewWebhookService(
+		repos.WebhookEndpoint,
+		repos.WebhookDelivery,
+		core.DB,
+	)
+
 	return &SharedServices{
 		Account:      accountService,
 		Task:         taskService,
@@ -64,6 +78,8 @@ func InitSharedServices(core *Core) (*SharedServices, error) {
 		TokenManager: tokenManager,
 		Exchange:     exchangeService,
 		TaskQueue:    taskQueue,
+		Export:       exportService,
+		Webhook:      webhookService,
 	}, nil
 }
 

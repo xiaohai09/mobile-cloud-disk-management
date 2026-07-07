@@ -74,3 +74,16 @@ func (r *ExportHistoryRepository) GetRecentByUser(userID uint, limit int) ([]*mo
 		Find(&histories).Error
 	return histories, err
 }
+
+// GetPending 获取所有待处理的导出任务
+func (r *ExportHistoryRepository) GetPending(limit int) ([]*models.ExportHistory, error) {
+	var histories []*models.ExportHistory
+	if limit <= 0 {
+		limit = 10
+	}
+	err := r.db.Where("status = ?", "pending").
+		Order("created_at ASC").
+		Limit(limit).
+		Find(&histories).Error
+	return histories, err
+}

@@ -151,6 +151,10 @@ services:
       WORKER_MONITOR_HOST: 127.0.0.1
       WORKER_MONITOR_PORT: 8081
       WORKER_MONITOR_ALLOW_PLAINTEXT: ${WORKER_MONITOR_ALLOW_PLAINTEXT:-false}
+      ENABLE_EXPORT_WORKER: ${ENABLE_EXPORT_WORKER:-false}
+      ENABLE_WEBHOOK_WORKER: ${ENABLE_WEBHOOK_WORKER:-false}
+      EXPORT_WORKER_POLL_INTERVAL: ${EXPORT_WORKER_POLL_INTERVAL:-5s}
+      WEBHOOK_WORKER_POLL_INTERVAL: ${WEBHOOK_WORKER_POLL_INTERVAL:-5s}
     networks:
       - caiyun-network
     healthcheck:
@@ -167,6 +171,92 @@ services:
         limits:
           memory: 1g
           cpus: "1.5"
+
+  backend-export-worker:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-xiaohai09}/mobile-cloud-disk-management-export-worker:${IMAGE_TAG:-latest}
+    container_name: caiyun-export-worker
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: "{{.Name}}"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: ${MYSQL_USER:-caiyun_app}
+      DB_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}
+      DB_NAME: caiyun
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+      EXPORT_WORKER_POLL_INTERVAL: ${EXPORT_WORKER_POLL_INTERVAL:-5s}
+      EXPORT_WORKER_BATCH_SIZE: ${EXPORT_WORKER_BATCH_SIZE:-10}
+    networks:
+      - caiyun-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8082/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        reservations:
+          memory: "128m"
+          cpus: "0.25"
+        limits:
+          memory: 512m
+          cpus: "0.5"
+
+  backend-webhook-worker:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-xiaohai09}/mobile-cloud-disk-management-webhook-worker:${IMAGE_TAG:-latest}
+    container_name: caiyun-webhook-worker
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: "{{.Name}}"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: ${MYSQL_USER:-caiyun_app}
+      DB_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}
+      DB_NAME: caiyun
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+      WEBHOOK_WORKER_POLL_INTERVAL: ${WEBHOOK_WORKER_POLL_INTERVAL:-5s}
+      WEBHOOK_WORKER_RECENT_LIMIT: ${WEBHOOK_WORKER_RECENT_LIMIT:-20}
+    networks:
+      - caiyun-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8083/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        reservations:
+          memory: "128m"
+          cpus: "0.25"
+        limits:
+          memory: 512m
+          cpus: "0.5"
 
   frontend:
     image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-xiaohai09}/mobile-cloud-disk-management-frontend:${IMAGE_TAG:-latest}
