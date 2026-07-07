@@ -204,7 +204,7 @@ func (m *DBManager) StreamQuery(ctx context.Context, query string, args ...inter
 	}
 
 	// 设置流式选项
-	_ = rows.ColumnTypes()
+	rows.ColumnTypes()
 
 	return rows, nil
 }

@@ -934,7 +934,7 @@ func (h *ExchangeHandler) ImmediateExchange(c *gin.Context) {
 	}
 
 	// 立即执行任务
-	_ = h.exchangeService.ExecuteExchangeTask(taskID)
+	go h.exchangeService.ExecuteExchangeTask(c.Request.Context(), task.ID, userID)
 
 	apiresponse.Success(c, ImmediateExchangeResponse{
 		Success: true,

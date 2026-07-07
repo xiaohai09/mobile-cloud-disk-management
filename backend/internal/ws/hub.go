@@ -405,13 +405,13 @@ func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request, userID uin
 func (c *Client) readPump() {
 	defer func() {
 		c.hub.tryUnregister(c)
-		_ = c.conn.Close()
+		c.conn.Close()
 	}()
 
 	c.conn.SetReadLimit(4096)
-	_ = c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 	c.conn.SetPongHandler(func(string) error {
-		_ = c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 		return nil
 	})
 
@@ -428,15 +428,15 @@ func (c *Client) writePump() {
 	ticker := time.NewTicker(30 * time.Second)
 	defer func() {
 		ticker.Stop()
-		_ = c.conn.Close()
+		c.conn.Close()
 	}()
 
 	for {
 		select {
 		case message, ok := <-c.send:
-			_ = c.conn.SetWriteDeadline(time.Now().Add(writeTimeout))
+			c.conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 			if !ok {
-				_ = c.conn.WriteMessage(messageType, data)
+				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 			if err := c.conn.WriteMessage(websocket.TextMessage, message); err != nil {
@@ -444,7 +444,7 @@ func (c *Client) writePump() {
 			}
 
 		case <-ticker.C:
-			_ = c.conn.SetWriteDeadline(time.Now().Add(writeTimeout))
+			c.conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}
