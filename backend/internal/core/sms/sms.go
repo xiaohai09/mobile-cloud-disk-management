@@ -121,7 +121,7 @@ func GetCodeStatus(phone string) (*CodeStatus, error) {
 		log.Printf("[SMS] 查询状态请求失败 phone=%s url=%s err=%v", phone, requestURL, err)
 		return nil, fmt.Errorf("请求失败: %s", err.Error())
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	respBody, err := utils.ReadLimitedBody(resp.Body, maxSMSResponseBytes)
 	if err != nil {
@@ -223,7 +223,7 @@ func postJSON(path string, payload map[string]string, phone string) (*SmsApiResp
 		log.Printf("[SMS] 请求失败 phone=%s url=%s err=%v", phone, requestURL, err)
 		return nil, fmt.Errorf("请求失败: %s", err.Error())
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	respBody, err := utils.ReadLimitedBody(resp.Body, maxSMSResponseBytes)
 	if err != nil {

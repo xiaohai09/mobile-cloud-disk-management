@@ -458,7 +458,7 @@ func (rm *RetryManager) ExecuteWithRetry(
 
 			if attempt == rm.maxRetries {
 				// 最后一次尝试失败
-				rm.monitor.FailTask(accountID, taskType, err)
+				_ = rm.monitor.FailTask(accountID, taskType, err)
 				return err
 			}
 
@@ -470,7 +470,7 @@ func (rm *RetryManager) ExecuteWithRetry(
 			onProgress(1.0, "任务执行成功")
 		}
 
-		rm.monitor.CompleteTask(accountID, taskType, true, "任务执行成功")
+		_ = rm.monitor.CompleteTask(accountID, taskType, true, "任务执行成功")
 		return nil
 	}
 

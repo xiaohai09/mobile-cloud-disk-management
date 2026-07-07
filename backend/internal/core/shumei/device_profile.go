@@ -261,7 +261,7 @@ func FetchDeviceID(ctx context.Context, client *stdhttp.Client, endpoint string)
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := readLimited(resp.Body, 1<<20)
 	if err != nil {

@@ -227,7 +227,7 @@ func (s *WebhookService) deliverWebhook(endpoint *models.WebhookEndpoint, eventT
 	if resp != nil {
 		statusCode := resp.StatusCode
 		delivery.StatusCode = &statusCode
-		resp.Body.Close()
+		_ = resp.Body.Close()
 	}
 
 	if err != nil {

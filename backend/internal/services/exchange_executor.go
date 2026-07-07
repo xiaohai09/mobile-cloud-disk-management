@@ -8,7 +8,6 @@ import (
 	"caiyun/internal/models"
 	"caiyun/internal/utils"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -161,7 +160,7 @@ func executeExchangeOnce(prizeID string, authCtx *exchangeAuthContext, session *
 	if err != nil {
 		return exchangeAttemptResult{success: false, message: fmt.Sprintf("请求失败：%v", err), execTime: int(time.Since(startTime).Milliseconds())}
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bodyBytes, err := utils.ReadLimitedBody(resp.Body, utils.DefaultMaxResponseBodyBytes)
 	if err != nil {
@@ -252,7 +251,7 @@ func seedExchangeCookies(session *exchangeHTTPSession, account *models.ExchangeA
 	}
 	if authCtx != nil && authCtx.jwtToken != "" {
 		cookies = append(cookies, &http.Cookie{Name: "jwtToken", Value: authCtx.jwtToken, Path: "/"})
-		if userDomainID := exchangeUserDomainID(authCtx.jwtToken); userDomainID != "" {
+		if userDomainID := jwtUserDomainID(authCtx.jwtToken); userDomainID != "" {
 			cookies = append(cookies, &http.Cookie{Name: "userDomainId", Value: userDomainID, Path: "/"})
 		}
 	}
@@ -390,7 +389,7 @@ func fetchExchangeSlide(session *exchangeHTTPSession, authCtx *exchangeAuthConte
 	if err != nil {
 		return nil, fmt.Errorf("获取滑块验证码请求失败: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bodyBytes, err := utils.ReadLimitedBody(resp.Body, utils.DefaultMaxResponseBodyBytes)
 	if err != nil {
@@ -480,37 +479,6 @@ func buildExchangeURLWithPuzzle(prizeID string, puzzleOffset int) string {
 	values.Set("puzzleOffset", strconv.Itoa(puzzleOffset))
 	values.Set("smsCode", "")
 	return "https://m.mcloud.139.com/ycloud/signin/page/exchangeV2?" + values.Encode()
-}
-
-func exchangeUserDomainID(token string) string {
-	parts := strings.Split(strings.TrimSpace(token), ".")
-	if len(parts) < 2 {
-		return ""
-	}
-	data, err := base64.RawURLEncoding.DecodeString(parts[1])
-	if err != nil {
-		return ""
-	}
-	var body struct {
-		Sub interface{} `json:"sub"`
-	}
-	if err := json.Unmarshal(data, &body); err != nil {
-		return ""
-	}
-	switch sub := body.Sub.(type) {
-	case map[string]interface{}:
-		if value, ok := sub["userDomainId"].(string); ok {
-			return strings.TrimSpace(value)
-		}
-	case string:
-		var nested map[string]interface{}
-		if err := json.Unmarshal([]byte(sub), &nested); err == nil {
-			if value, ok := nested["userDomainId"].(string); ok {
-				return strings.TrimSpace(value)
-			}
-		}
-	}
-	return ""
 }
 
 func isExchangeTerminalMessage(message string) bool {

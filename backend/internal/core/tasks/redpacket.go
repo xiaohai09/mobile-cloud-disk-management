@@ -100,7 +100,7 @@ func (t *RedPacketTask) reportJournaling() {
 			t.logger.Error("上报失败", event, err)
 			continue
 		}
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		utils.Sleep(200)
 	}
 }

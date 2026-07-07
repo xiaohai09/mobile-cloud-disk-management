@@ -92,6 +92,23 @@ func (t *CloudBattleTask) login() error {
 
 // getSpecToken 获取 specToken
 func (t *CloudBattleTask) getSpecToken() (string, error) {
+	return querySpecToken(t.client)
+}
+
+// generateSignHeaders 生成签名头（对应源码 ys() 函数）
+// e=1 表示使用 seedMdYYLIZfbCxg 盐值（默认，用于 beinvite/finish）
+// e=2 表示使用 sekaMdYYLIZfbCfm 盐值（用于 tyrzLogin）
+func (t *CloudBattleTask) generateSignHeaders(timestamp int64, queryString string) map[string]string {
+	return generateSignHeadersWithSalt(timestamp, queryString, 1)
+}
+
+// generateSignHeadersForLogin 生成登录用签名头（e=2）
+func (t *CloudBattleTask) generateSignHeadersForLogin(timestamp int64, queryString string) map[string]string {
+	return generateSignHeadersWithSalt(timestamp, queryString, 2)
+}
+
+// querySpecToken 获取 specToken
+func querySpecToken(client *http.Client) (string, error) {
 	url := "https://user-njs.yun.139.com/user/querySpecToken"
 	headers := map[string]string{
 		"Content-Type": "application/json",
@@ -100,12 +117,12 @@ func (t *CloudBattleTask) getSpecToken() (string, error) {
 		"toSourceId": "001005",
 	}
 
-	resp, err := t.client.Post(url, headers, body)
+	resp, err := client.Post(url, headers, body)
 	if err != nil {
 		return "", fmt.Errorf("请求失败: %w", err)
 	}
 
-	responseBody, err := t.client.ReadResponseBody(resp)
+	responseBody, err := client.ReadResponseBody(resp)
 	if err != nil {
 		return "", fmt.Errorf("读取响应失败: %w", err)
 	}
@@ -127,18 +144,6 @@ func (t *CloudBattleTask) getSpecToken() (string, error) {
 	}
 
 	return result.Data.Token, nil
-}
-
-// generateSignHeaders 生成签名头（对应源码 ys() 函数）
-// e=1 表示使用 seedMdYYLIZfbCxg 盐值（默认，用于 beinvite/finish）
-// e=2 表示使用 sekaMdYYLIZfbCfm 盐值（用于 tyrzLogin）
-func (t *CloudBattleTask) generateSignHeaders(timestamp int64, queryString string) map[string]string {
-	return generateSignHeadersWithSalt(timestamp, queryString, 1)
-}
-
-// generateSignHeadersForLogin 生成登录用签名头（e=2）
-func (t *CloudBattleTask) generateSignHeadersForLogin(timestamp int64, queryString string) map[string]string {
-	return generateSignHeadersWithSalt(timestamp, queryString, 2)
 }
 
 // generateSignHeadersWithSalt 通用签名头生成
@@ -308,7 +313,7 @@ func (t *CloudBattleTask) journaling(eventName string) {
 	body := fmt.Sprintf("account=&module=uservisit&optkeyword=%s&fromId=&flag=&fileId=&fileType=&fileExtname=&fileSize=&sourceid=1005&linkId=", eventName)
 	resp, err := t.client.Post(url, headers, body)
 	if err == nil && resp != nil {
-		resp.Body.Close()
+		_ = resp.Body.Close()
 	}
 	utils.Sleep(utils.RandomInt(50, 200))
 }
@@ -351,10 +356,9 @@ func (t *CloudBattleTask) playGame(gameTime int) error {
 	return nil
 }
 
-// beinviteHecheng1T 开始游戏
-func (t *CloudBattleTask) beinviteHecheng1T(serverTime int64) error {
-	url := "https://caiyun.feixin.10086.cn/market/signin/hecheng1T/beinvite?inviter="
-	// beinvite 使用 e=1 盐值（默认）
+// callHecheng1TEndpoint 调用云朵大作战通用 GET 接口并校验 code=0
+func (t *CloudBattleTask) callHecheng1TEndpoint(path string, serverTime int64, failMessage string) error {
+	// 使用 e=1 盐值（默认）
 	signHeaders := t.generateSignHeaders(serverTime, "")
 	headers := map[string]string{
 		"Content-Type": "application/json",
@@ -365,7 +369,7 @@ func (t *CloudBattleTask) beinviteHecheng1T(serverTime int64) error {
 		headers[k] = v
 	}
 
-	resp, err := t.client.Get(url, headers)
+	resp, err := t.client.Get("https://caiyun.feixin.10086.cn"+path, headers)
 	if err != nil {
 		return fmt.Errorf("请求失败: %w", err)
 	}
@@ -384,47 +388,18 @@ func (t *CloudBattleTask) beinviteHecheng1T(serverTime int64) error {
 	}
 
 	if result.Code != 0 {
-		return fmt.Errorf("开始游戏失败: code=%d, msg=%s", result.Code, result.Message)
+		return fmt.Errorf("%s: code=%d, msg=%s", failMessage, result.Code, result.Message)
 	}
 
 	return nil
 }
 
+// beinviteHecheng1T 开始游戏
+func (t *CloudBattleTask) beinviteHecheng1T(serverTime int64) error {
+	return t.callHecheng1TEndpoint("/market/signin/hecheng1T/beinvite?inviter=", serverTime, "开始游戏失败")
+}
+
 // finishHecheng1T 结束游戏
 func (t *CloudBattleTask) finishHecheng1T(serverTime int64) error {
-	url := "https://caiyun.feixin.10086.cn/market/signin/hecheng1T/finish?flag=true"
-	// finish 使用 e=1 盐值（默认）
-	signHeaders := t.generateSignHeaders(serverTime, "")
-	headers := map[string]string{
-		"Content-Type": "application/json",
-		"jwttoken":     t.jwtToken,
-		"referer":      "https://caiyun.feixin.10086.cn:7071/portal/synthesisonet/index.html?sourceid=1005",
-	}
-	for k, v := range signHeaders {
-		headers[k] = v
-	}
-
-	resp, err := t.client.Get(url, headers)
-	if err != nil {
-		return fmt.Errorf("请求失败: %w", err)
-	}
-
-	responseBody, err := t.client.ReadResponseBody(resp)
-	if err != nil {
-		return fmt.Errorf("读取响应失败: %w", err)
-	}
-
-	var result struct {
-		Code    int    `json:"code"`
-		Message string `json:"msg"`
-	}
-	if err := json.Unmarshal([]byte(responseBody), &result); err != nil {
-		return fmt.Errorf("解析响应失败: %w", err)
-	}
-
-	if result.Code != 0 {
-		return fmt.Errorf("结束游戏失败: code=%d, msg=%s", result.Code, result.Message)
-	}
-
-	return nil
+	return t.callHecheng1TEndpoint("/market/signin/hecheng1T/finish?flag=true", serverTime, "结束游戏失败")
 }

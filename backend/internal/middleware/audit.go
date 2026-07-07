@@ -94,7 +94,7 @@ func (w *asyncAuditWriter) worker() {
 				continue
 			}
 			if err := w.repo.Create(auditLog); err != nil {
-				gin.DefaultErrorWriter.Write([]byte("保存审计日志失败: " + err.Error() + "\n"))
+				_, _ = gin.DefaultErrorWriter.Write([]byte("保存审计日志失败: " + err.Error() + "\n"))
 			}
 		case <-w.stopCh:
 			return
@@ -110,7 +110,7 @@ func (w *asyncAuditWriter) enqueue(auditLog *models.AuditLog) {
 	case w.ch <- auditLog:
 	default:
 		auditDroppedTotal.Add(1)
-		gin.DefaultErrorWriter.Write([]byte("审计日志队列已满，丢弃当前审计日志\n"))
+		_, _ = gin.DefaultErrorWriter.Write([]byte("审计日志队列已满，丢弃当前审计日志\n"))
 	}
 }
 

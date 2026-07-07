@@ -387,7 +387,7 @@ func (c *Client) RequestWithContext(ctx context.Context, method, reqURL string, 
 			lastErr = nil
 			// 非最后一次尝试时关闭响应体，防止连接泄漏
 			if attempt < maxRetries {
-				resp.Body.Close()
+				_ = resp.Body.Close()
 			}
 			continue
 		}
@@ -444,7 +444,7 @@ func (c *Client) ParseJSONResponse(resp *http.Response, result interface{}) erro
 	if resp == nil {
 		return fmt.Errorf("响应为空")
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := utils.ReadLimitedBody(resp.Body, utils.DefaultMaxResponseBodyBytes)
 	if err != nil {
@@ -468,7 +468,7 @@ func (c *Client) ReadResponseBody(resp *http.Response) (string, error) {
 	if resp == nil {
 		return "", fmt.Errorf("响应为空")
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := utils.ReadLimitedBody(resp.Body, utils.DefaultMaxResponseBodyBytes)
 	if err != nil {

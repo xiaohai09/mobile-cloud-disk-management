@@ -362,7 +362,7 @@ func (s *ExchangeScheduler) recordResult(task *models.ExchangeTask, success bool
 	if err := s.exchangeRecordRepo.Create(record); err != nil {
 		log.Printf("【抢兑调度器】记录抢兑结果失败: %v", err)
 	}
-	s.exchangeTaskRepo.UpdateAttempt(task.ID, success, message)
+	_ = s.exchangeTaskRepo.UpdateAttempt(task.ID, success, message)
 	createExchangeSystemLog(
 		s.taskLogRepo,
 		task.UserID,
@@ -393,21 +393,21 @@ func (s *ExchangeScheduler) finalizeTaskResult(task *models.ExchangeTask, succes
 	if success {
 		if isSingleRunExchangeTask(task.TaskType) {
 			if task.AttemptedCount+1 >= task.MaxAttempts {
-				s.exchangeTaskRepo.UpdateStatus(task.ID, string(models.ExchangeTaskCompleted))
+				_ = s.exchangeTaskRepo.UpdateStatus(task.ID, string(models.ExchangeTaskCompleted))
 			} else {
-				s.exchangeTaskRepo.UpdateStatus(task.ID, string(models.ExchangeTaskPending))
+				_ = s.exchangeTaskRepo.UpdateStatus(task.ID, string(models.ExchangeTaskPending))
 			}
 			return
 		}
 
-		s.exchangeTaskRepo.UpdateStatus(task.ID, string(models.ExchangeTaskPending))
+		_ = s.exchangeTaskRepo.UpdateStatus(task.ID, string(models.ExchangeTaskPending))
 		return
 	}
 
 	if s.shouldStopExchange(message) || strings.Contains(message, "商品已下架或不存在") || strings.Contains(message, "商品ID不是可兑换 prizeId") {
-		s.exchangeTaskRepo.UpdateStatus(task.ID, string(models.ExchangeTaskCompleted))
+		_ = s.exchangeTaskRepo.UpdateStatus(task.ID, string(models.ExchangeTaskCompleted))
 		return
 	}
 
-	s.exchangeTaskRepo.UpdateStatus(task.ID, string(models.ExchangeTaskPending))
+	_ = s.exchangeTaskRepo.UpdateStatus(task.ID, string(models.ExchangeTaskPending))
 }

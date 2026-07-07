@@ -355,7 +355,7 @@ func putBinaryToUploadURL(uploadURL string, content []byte) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("HTTP 状态码异常: %d", resp.StatusCode)

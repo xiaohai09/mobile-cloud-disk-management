@@ -156,7 +156,7 @@ func (t *InviteFriendsTask) shareToDatacenter() {
 		return
 	}
 	if resp != nil {
-		resp.Body.Close()
+		_ = resp.Body.Close()
 	}
 }
 

@@ -47,7 +47,7 @@ func (l *Logger) log(level LogLevel, color string, args ...interface{}) {
 	timestamp := time.Now().Format("2006-01-02 15:04:05")
 	message := fmt.Sprintf("%s [%s] %s", color, timestamp, formatArgs(args...))
 
-	fmt.Fprintln(l.output, message)
+	_, _ = fmt.Fprintln(l.output, message)
 }
 
 // formatArgs 格式化参数

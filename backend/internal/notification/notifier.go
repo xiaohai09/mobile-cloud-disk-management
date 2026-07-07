@@ -191,7 +191,7 @@ func (wn *WebhookNotifier) Send(notification *Notification) error {
 		wn.logger.Printf("Webhook通知发送失败: %v", err)
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
 		wn.logger.Printf("Webhook通知返回错误状态码: %d", resp.StatusCode)

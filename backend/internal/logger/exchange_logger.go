@@ -188,9 +188,9 @@ func (l *ExchangeLogger) writeToFile(level, msg string) {
 	if err != nil {
 		return
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
-	f.WriteString(msg + "\n")
+	_, _ = f.WriteString(msg + "\n")
 }
 
 // triggerAlert 触发告警（简化实现，后续集成告警系统）
@@ -209,7 +209,7 @@ func (l *ExchangeLogger) RotateLogs() {
 	// 删除超过保留天数的日志文件
 	cutoff := time.Now().AddDate(0, 0, -l.maxAge)
 
-	filepath.Walk(l.logDir, func(path string, info os.FileInfo, err error) error {
+	_ = filepath.Walk(l.logDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil
 		}
@@ -220,7 +220,7 @@ func (l *ExchangeLogger) RotateLogs() {
 
 		// 检查是否是过期的日志文件
 		if info.ModTime().Before(cutoff) && strings.HasSuffix(info.Name(), ".log") {
-			os.Remove(path)
+			_ = os.Remove(path)
 			log.Printf("已删除过期日志文件：%s\n", path)
 		}
 
@@ -261,7 +261,7 @@ func (l *ExchangeLogger) GetStats() map[string]interface{} {
 	}
 
 	// 统计日志文件数量和大小
-	filepath.Walk(l.logDir, func(path string, info os.FileInfo, err error) error {
+	_ = filepath.Walk(l.logDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil
 		}

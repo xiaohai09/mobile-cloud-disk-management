@@ -67,7 +67,7 @@ func (s *TaskService) executeTaskCodesForAccount(ctx context.Context, account *m
 
 	// 更新账号的云朵数
 	if finalCloudCount > 0 {
-		s.accountRepo.UpdateCloudCount(account.ID, finalCloudCount)
+		_ = s.accountRepo.UpdateCloudCount(account.ID, finalCloudCount)
 	}
 
 	// 将总获得云朵数分配到 receive 任务的日志中（如果有的话）

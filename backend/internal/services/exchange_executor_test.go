@@ -71,7 +71,7 @@ func TestExchangeUserDomainIDParsesJWTSubString(t *testing.T) {
 	payload := base64.RawURLEncoding.EncodeToString([]byte(`{"sub":"{\"userDomainId\":\"domain-123\"}"}`))
 	token := "e30." + payload + ".sig"
 
-	if got := exchangeUserDomainID(token); got != "domain-123" {
+	if got := jwtUserDomainID(token); got != "domain-123" {
 		t.Fatalf("exchangeUserDomainID() = %q, want domain-123", got)
 	}
 }

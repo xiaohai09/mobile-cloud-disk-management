@@ -305,7 +305,7 @@ func (s *AccountService) GetToken(accountID uint) (string, error) {
 
 	// 缓存Token（24小时）
 	tokenCacheKey := fmt.Sprintf("account:token:%d", accountID)
-	s.cache.Set(tokenCacheKey, token, 24*time.Hour)
+	_ = s.cache.Set(tokenCacheKey, token, 24*time.Hour)
 
 	return token, nil
 }
@@ -355,7 +355,7 @@ func (s *AccountService) RefreshToken(account *models.Account) error {
 
 	// 更新缓存
 	cacheKey := fmt.Sprintf("account:token:%d", account.ID)
-	s.cache.Set(cacheKey, account.Token, 24*time.Hour)
+	_ = s.cache.Set(cacheKey, account.Token, 24*time.Hour)
 
 	return nil
 }

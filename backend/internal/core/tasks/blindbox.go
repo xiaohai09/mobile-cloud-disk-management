@@ -102,41 +102,7 @@ func (t *BlindboxTask) loginBlindbox() error {
 
 // getSpecToken 获取 specToken
 func (t *BlindboxTask) getSpecToken() (string, error) {
-	url := "https://user-njs.yun.139.com/user/querySpecToken"
-	headers := map[string]string{
-		"Content-Type": "application/json",
-	}
-	body := map[string]interface{}{
-		"toSourceId": "001005",
-	}
-
-	resp, err := t.client.Post(url, headers, body)
-	if err != nil {
-		return "", fmt.Errorf("请求失败: %w", err)
-	}
-
-	responseBody, err := t.client.ReadResponseBody(resp)
-	if err != nil {
-		return "", fmt.Errorf("读取响应失败: %w", err)
-	}
-
-	var result struct {
-		Code    interface{} `json:"code"`
-		Success bool        `json:"success"`
-		Message string      `json:"msg"`
-		Data    struct {
-			Token string `json:"token"`
-		} `json:"data"`
-	}
-	if err := json.Unmarshal([]byte(responseBody), &result); err != nil {
-		return "", fmt.Errorf("解析响应失败: %w", err)
-	}
-
-	if result.Data.Token == "" {
-		return "", fmt.Errorf("获取 specToken 失败: %s", result.Message)
-	}
-
-	return result.Data.Token, nil
+	return querySpecToken(t.client)
 }
 
 // loginMail 通过邮箱登录获取 rmkey 和 sid
@@ -315,7 +281,7 @@ func (t *BlindboxTask) journaling(eventName string) {
 	body := fmt.Sprintf("account=&module=uservisit&optkeyword=%s&fromId=&flag=&fileId=&fileType=&fileExtname=&fileSize=&sourceid=1005&linkId=", eventName)
 	resp, err := t.client.Post(url, headers, body)
 	if err == nil && resp != nil {
-		resp.Body.Close()
+		_ = resp.Body.Close()
 	}
 }
 
@@ -514,7 +480,7 @@ func (t *BlindboxTask) registerSingleTask(taskID string) {
 		t.logger.Error("注册盲盒任务失败", err)
 		return
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 }
 
 // tryOpenAfterRegister 注册任务后尝试开盒
