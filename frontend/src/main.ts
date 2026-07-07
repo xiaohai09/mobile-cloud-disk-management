@@ -18,8 +18,10 @@ app.use(i18n)
 
 // Initialize auth store from localStorage (must be after pinia is installed)
 import { useAuthStore } from './store/auth'
+import { purgeSensitiveStorage } from './utils/security'
 const authStore = useAuthStore()
 authStore.initialize()
+purgeSensitiveStorage()
 
 app.use(router)
 installElementPlus(app)

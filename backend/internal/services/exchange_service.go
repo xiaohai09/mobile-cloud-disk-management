@@ -365,7 +365,9 @@ func (s *ExchangeService) ExecuteExchangeTask(taskID uint, userID uint) error {
 	}
 
 	// 异步执行抢兑
-	go s.executeSingleTask(task)
+	utils.SafeGo("exchange:single:"+fmt.Sprintf("%d", task.ID), func() {
+		s.executeSingleTask(task)
+	})
 
 	return nil
 }
@@ -790,7 +792,7 @@ func (s *ExchangeService) ExecuteMonthlyExchange() {
 
 	for _, account := range accounts {
 		wg.Add(1)
-		go func(acc *models.ExchangeAccount) {
+		utils.SafeGo("exchange:monthly:"+fmt.Sprintf("%d", account.ID), func() {
 			defer wg.Done()
 
 			semaphore <- struct{}{}
@@ -798,7 +800,7 @@ func (s *ExchangeService) ExecuteMonthlyExchange() {
 
 			// 执行月卡兑换
 			s.executeMonthlyExchangeForAccount(acc, monthlyCardPrizeID)
-		}(account)
+		})
 	}
 
 	wg.Wait()

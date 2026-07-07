@@ -23,10 +23,10 @@ func (s *ExchangeScheduler) executeExchangeWithAutoSwitch(tasks []*models.Exchan
 
 	for prizeID, groupTasks := range taskGroups {
 		wg.Add(1)
-		go func(prizeID string, groupTasks []*models.ExchangeTask) {
+		utils.SafeGo("exchange:productGroup:"+prizeID, func() {
 			defer wg.Done()
 			s.executeProductGroup(prizeID, groupTasks, limiter)
-		}(prizeID, groupTasks)
+		})
 	}
 
 	wg.Wait()
@@ -97,7 +97,7 @@ func (s *ExchangeScheduler) executeProductGroup(prizeID string, tasks []*models.
 		}
 		task := task
 		wg.Add(1)
-		go func() {
+		utils.SafeGo("exchange:task:"+fmt.Sprintf("%d", task.ID), func() {
 			defer wg.Done()
 
 			accountName := exchangeAccountName(&task.ExchangeAccount)

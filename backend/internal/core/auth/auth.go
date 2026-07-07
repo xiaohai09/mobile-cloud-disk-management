@@ -1,19 +1,21 @@
 package auth
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
-	"caiyun/internal/constants"
+	customhttp "caiyun/internal/core/http"
+	"caiyun/internal/core/utils"
 )
 
 // Auth 认证管理器
 type Auth struct {
-	client *http.Client
+	client *customhttp.Client
 }
 
 type TokenRefreshError struct {
@@ -33,7 +35,7 @@ func (e *TokenRefreshError) Error() string {
 }
 
 // NewAuth 创建认证管理器
-func NewAuth(client *http.Client) *Auth {
+func NewAuth(client *customhttp.Client) *Auth {
 	return &Auth{client: client}
 }
 

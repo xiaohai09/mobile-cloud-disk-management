@@ -21,7 +21,7 @@
         {{ announcement?.title }}
       </h3>
       <div class="popup-body">
-        {{ announcement?.content }}
+        {{ escapeHtml(announcement?.content || '') }}
       </div>
       <div
         v-if="announcement?.created_at"
@@ -48,6 +48,7 @@
 import { ref, watch } from 'vue'
 import { Bell } from '@element-plus/icons-vue'
 import type { Announcement } from '@/api/announcement'
+import { escapeHtml } from '@/utils/security'
 
 const props = defineProps<{
   modelValue: boolean

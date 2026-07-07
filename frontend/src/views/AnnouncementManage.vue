@@ -283,16 +283,14 @@
           </el-tag>
           <span class="view-time">{{ formatDate(currentAnnouncement?.created_at) }}</span>
         </div>
-        <div class="view-body">
-          {{ currentAnnouncement?.content }}
-        </div>
+        <div class="view-body">{{ safeContent }}</div>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Bell, Plus } from '@element-plus/icons-vue'
 import {
@@ -304,6 +302,7 @@ import {
   type CreateAnnouncementRequest,
   type UpdateAnnouncementRequest
 } from '@/api/announcement'
+import { escapeHtml } from '@/utils/security'
 
 const loading = ref(false)
 const announcements = ref<Announcement[]>([])
@@ -338,6 +337,8 @@ const formatDate = (date: string | undefined) => {
   if (!date) return ''
   return new Date(date).toLocaleString('zh-CN')
 }
+
+const safeContent = computed(() => escapeHtml(currentAnnouncement.value?.content || ''))
 
 const loadAnnouncements = async () => {
   loading.value = true

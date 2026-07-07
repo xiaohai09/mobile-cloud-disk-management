@@ -39,6 +39,7 @@ type ExchangeScheduler struct {
 	stopChan chan struct{}
 	stopOnce sync.Once
 	loopWG   sync.WaitGroup
+	batchWG  sync.WaitGroup
 }
 
 type schedulerLeaseStore interface {
@@ -101,6 +102,7 @@ func (s *ExchangeScheduler) Stop() {
 		close(s.stopChan)
 	})
 	s.loopWG.Wait()
+	s.batchWG.Wait()
 }
 
 // scheduleLoop 调度循环
@@ -293,7 +295,11 @@ func (s *ExchangeScheduler) executeExchangeByTime(hour, minute int) {
 	}
 
 	log.Printf("【抢兑调度器】开始执行 %s 抢兑，共 %d 个任务", slot, len(tasksToExecute))
-	go s.executeExchangeWithAutoSwitch(tasksToExecute, slot)
+	s.batchWG.Add(1)
+	utils.SafeGo("exchange:batch:"+slot, func() {
+		defer s.batchWG.Done()
+		s.executeExchangeWithAutoSwitch(tasksToExecute, slot)
+	})
 }
 
 // prepareMorningQueue 准备上午抢兑队列

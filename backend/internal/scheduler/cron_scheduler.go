@@ -41,6 +41,8 @@ type Scheduler struct {
 	cancel        context.CancelFunc
 	logger        *log.Logger
 	notifications chan *JobResult
+
+	notificationWG sync.WaitGroup
 }
 
 // Config 调度器配置
@@ -161,6 +163,7 @@ func (s *Scheduler) Start() {
 	s.logger.Println("定时任务调度器已启动")
 
 	// 启动通知处理器
+	s.notificationWG.Add(1)
 	go s.notificationHandler()
 }
 
@@ -169,6 +172,10 @@ func (s *Scheduler) Stop() {
 	s.logger.Println("正在停止定时任务调度器...")
 	s.cancel()
 	s.cron.Stop()
+
+	close(s.notifications)
+
+	s.notificationWG.Wait()
 	s.logger.Println("定时任务调度器已停止")
 }
 
@@ -358,9 +365,13 @@ func (s *Scheduler) validateSchedule(schedule string) error {
 
 // notificationHandler 处理通知
 func (s *Scheduler) notificationHandler() {
+	defer s.notificationWG.Done()
 	for {
 		select {
-		case result := <-s.notifications:
+		case result, ok := <-s.notifications:
+			if !ok {
+				return
+			}
 			// 这里可以添加通知逻辑，比如发送邮件、Slack消息等
 			s.logger.Printf("任务通知 - %s: %s (%v)", result.JobName, result.Status, result.Duration)
 

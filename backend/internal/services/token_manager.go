@@ -28,6 +28,7 @@ type TokenManager struct {
 	lockCache      *cache.RedisCache
 	ctx            context.Context
 	cancel         context.CancelFunc
+	loopWG         sync.WaitGroup
 }
 
 // TokenInfo 描述账号当前 Token 状态。
@@ -75,6 +76,7 @@ func NewTokenManager(
 	}
 
 	// 启动预刷新协程（包含扫描与消费预刷新队列）。
+	tm.loopWG.Add(2)
 	go tm.preRefreshLoop()
 	// 启动健康检查协程。
 	go tm.healthCheckLoop()
@@ -96,6 +98,7 @@ func (tm *TokenManager) Stop() {
 		return
 	}
 	tm.cancel()
+	tm.loopWG.Wait()
 }
 
 // GetToken 获取有效 Token（优先走缓存）。
@@ -275,6 +278,7 @@ func (tm *TokenManager) updateAccountJWTHealth(account *models.Account, tokenInf
 		account.JWTErrorCount = newCount
 		if newCount >= maxJWTRefreshFailures {
 			account.IsActive = false
+			tm.tokenCache.Delete(account.ID)
 			tokenInfo.ErrorMsg = "连续无法获取 JWT Token，账号已暂停，请重新登录后再启用任务"
 			if err := tm.accountRepo.SetActiveStatus(account.ID, false); err != nil {
 				log.Printf("[TokenManager] 账号 %d 自动暂停失败: %v", account.ID, err)
@@ -398,6 +402,7 @@ func randomLockValue(accountID uint) string {
 
 // preRefreshLoop 定时扫描即将过期 Token，并消费预刷新队列执行刷新。
 func (tm *TokenManager) preRefreshLoop() {
+	defer tm.loopWG.Done()
 	ticker := time.NewTicker(2 * time.Minute)
 	defer ticker.Stop()
 
@@ -439,6 +444,7 @@ func (tm *TokenManager) preRefreshExpiredTokens() {
 
 // healthCheckLoop 定时更新缓存中 Token 的健康状态。
 func (tm *TokenManager) healthCheckLoop() {
+	defer tm.loopWG.Done()
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 
@@ -479,6 +485,13 @@ func (tm *TokenManager) checkAllTokensHealth() {
 		// 清理超过 tokenRefreshErrorTTL 的 error 条目，避免 sync.Map 无限增长。
 		if tokenInfo.HealthStatus == "error" && time.Since(tokenInfo.LastRefresh) > 30*time.Minute {
 			tm.tokenCache.Delete(accountID)
+			return true
+		}
+
+		// 清理超过 1 小时未刷新的 stale 条目，避免 sync.Map 无限增长。
+		if time.Since(tokenInfo.LastRefresh) > 1*time.Hour {
+			tm.tokenCache.Delete(accountID)
+			return true
 		}
 
 		return true
