@@ -149,9 +149,6 @@ jobs:
           file: Dockerfile
           push: false
           tags: ghcr.io/${{ github.repository_owner }}/mobile-cloud-disk-management-frontend:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/mobile-cloud-disk-management-frontend:latest
-          no-cache: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   security-scan:
     name: Security Scan

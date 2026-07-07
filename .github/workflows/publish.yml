@@ -83,9 +83,6 @@ jobs:
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/mobile-cloud-disk-management-frontend:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/mobile-cloud-disk-management-frontend:latest
           labels: ${{ steps.meta.outputs.labels }}
-          no-cache: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Generate image manifest summary
         run: |
