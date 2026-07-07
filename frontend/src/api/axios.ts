@@ -68,7 +68,7 @@ function getCookie(name: string): string {
 
 function validateCsrfToken(token: string): boolean {
   if (!token || token.length < 8) return false
-  return /^[a-zA-Z0-9_\-]+$/.test(token)
+  return /^[a-zA-Z0-9_-]+$/.test(token)
 }
 
 interface ErrorResponseBody {

@@ -283,7 +283,9 @@
           </el-tag>
           <span class="view-time">{{ formatDate(currentAnnouncement?.created_at) }}</span>
         </div>
-        <div class="view-body">{{ safeContent }}</div>
+        <div class="view-body">
+          {{ safeContent }}
+        </div>
       </div>
     </el-dialog>
   </div>
