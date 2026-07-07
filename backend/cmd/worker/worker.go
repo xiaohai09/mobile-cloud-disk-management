@@ -157,7 +157,7 @@ func (w *Worker) processQueueTask(message *queue.TaskMessage) {
 	account, err := w.accountService.GetAccountByID(message.AccountID)
 	if err != nil {
 		log.Printf("获取账号失败: %v", err)
-		w.notifier.SendTaskFailure(message.AccountID, message.TaskType, fmt.Sprintf("获取账号失败: %v", err))
+		_ = w.notifier.SendTaskFailure(taskID, err)
 		w.handleQueueTaskFailure(message, err)
 		return
 	}
@@ -165,11 +165,11 @@ func (w *Worker) processQueueTask(message *queue.TaskMessage) {
 	// 执行任务：队列消息可以指定 all/all_tasks 或具体任务类型。
 	if err := w.ExecuteQueueAccountTask(account.ID, message.TaskType); err != nil {
 		log.Printf("任务执行失败: %v", err)
-		w.notifier.SendTaskFailure(message.AccountID, message.TaskType, err.Error())
+		_ = w.notifier.SendTaskFailure(taskID, err)
 		w.handleQueueTaskFailure(message, err)
 	} else {
 		log.Printf("任务执行成功: 账号ID=%d", message.AccountID)
-		w.notifier.SendTaskSuccess(message.AccountID, message.TaskType, "任务执行成功")
+		_ = w.notifier.SendTaskSuccess(taskID, duration)
 		if err := w.taskQueue.Ack(message); err != nil {
 			log.Printf("任务确认失败: account_id=%d task_type=%s err=%v", message.AccountID, message.TaskType, err)
 		}
@@ -253,7 +253,7 @@ func (w *Worker) ExecuteQueueAccountTask(accountID uint, taskType string) error 
 			return err
 		},
 		func(progress float64, message string) {
-			w.taskMonitor.UpdateTaskProgress(accountID, taskType, progress, message)
+			_ = w.taskMonitor.UpdateTaskProgress(taskID, progress)
 		},
 	)
 

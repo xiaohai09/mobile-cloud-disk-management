@@ -667,13 +667,13 @@ func sendSMTPMail(config SMTPConfig, from string, to []string, msg []byte) error
 			return err
 		}
 		_ = conn.SetDeadline(deadline)
-		defer conn.Close()
+		defer func() { _ = conn.Close() }()
 
 		client, err := smtp.NewClient(conn, config.Host)
 		if err != nil {
 			return err
 		}
-		defer client.Quit()
+		defer func() { _ = client.Quit() }()
 		if auth != nil {
 			if err := client.Auth(auth); err != nil {
 				return err
@@ -704,13 +704,13 @@ func sendSMTPMail(config SMTPConfig, from string, to []string, msg []byte) error
 		return err
 	}
 	_ = conn.SetDeadline(deadline)
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	client, err := smtp.NewClient(conn, config.Host)
 	if err != nil {
 		return err
 	}
-	defer client.Quit()
+	defer func() { _ = client.Quit() }()
 
 	if !config.UseTLS {
 		if ok, _ := client.Extension("STARTTLS"); ok {

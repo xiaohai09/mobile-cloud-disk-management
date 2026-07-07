@@ -292,7 +292,7 @@ func CopyFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer sourceFile.Close()
+	_ = sourceFile.Close()
 
 	if err := EnsureDir(dst); err != nil {
 		return err
@@ -302,7 +302,7 @@ func CopyFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer destFile.Close()
+	_ = destFile.Close()
 
 	_, err = io.Copy(destFile, sourceFile)
 	return err

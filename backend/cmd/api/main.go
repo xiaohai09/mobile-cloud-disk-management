@@ -33,5 +33,5 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	result.Server.Shutdown(ctx)
+	_ = result.Server.Shutdown(ctx)
 }

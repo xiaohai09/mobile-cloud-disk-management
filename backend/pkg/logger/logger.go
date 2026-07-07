@@ -155,7 +155,7 @@ func (hook *rotateHook) cleanOldBackups() {
 	// 按修改时间排序，删除最旧的
 	if len(backups) > hook.maxBackups {
 		for i := 0; i < len(backups)-hook.maxBackups; i++ {
-			os.Remove(backups[i].path)
+			_ = os.Remove(filePath)
 		}
 	}
 }
