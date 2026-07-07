@@ -37,3 +37,8 @@ Thumbs.db
 mysql-data/
 redis-data/
 grafana-data/
+
+# Local audit reports (kept locally only)
+AUDIT_REPORT.md
+DOCKER_AUDIT_REPORT.md
+backend/AUDIT_REPORT.md
