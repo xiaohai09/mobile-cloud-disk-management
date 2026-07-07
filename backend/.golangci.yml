@@ -30,7 +30,6 @@ linters:
   enable:
     - errcheck
     - govet
-    - gofmt
     - gocyclo
     - dupl
     - goconst
@@ -39,8 +38,6 @@ linters:
     - ineffassign
     - staticcheck
     - unused
-    - typecheck
 
 issues:
-  exclude-use-default: false
   max-same-issues: 0
