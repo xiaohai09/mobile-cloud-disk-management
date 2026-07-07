@@ -12,6 +12,7 @@ import (
 	corehttp "caiyun/internal/core/http"
 	"caiyun/internal/repository"
 	"caiyun/internal/services"
+	"caiyun/internal/utils"
 	"caiyun/pkg/database"
 
 	"gorm.io/gorm"
@@ -106,14 +107,20 @@ func InitCore() (*Core, error) {
 		return nil, fmt.Errorf("Redis 连接失败: 缓存实例为空")
 	}
 
+	crypto, err := utils.NewCryptoFromEnv()
+	if err != nil {
+		_ = closeGormDB(db)
+		return nil, fmt.Errorf("加密服务初始化失败: %w", err)
+	}
+
 	repos := Repositories{
 		User:            repository.NewUserRepository(db),
-		Account:         repository.NewAccountRepository(db),
+		Account:         repository.NewAccountRepository(db, crypto),
 		TaskLog:         repository.NewTaskLogRepository(db),
 		CloudStats:      repository.NewCloudStatsRepository(db),
 		TaskConfig:      repository.NewTaskConfigRepository(db),
 		Product:         repository.NewProductRepository(db),
-		ExchangeAccount: repository.NewExchangeAccountRepository(db),
+		ExchangeAccount: repository.NewExchangeAccountRepository(db, crypto),
 		ExchangeTask:    repository.NewExchangeTaskRepository(db),
 		ExchangeRecord:  repository.NewExchangeRecordRepository(db),
 		SystemConfig:    repository.NewSystemConfigRepository(db),
@@ -122,7 +129,7 @@ func InitCore() (*Core, error) {
 		WSMessage:       repository.NewWSMessageRepository(db),
 		Schema:          repository.NewSchemaRepository(db),
 		ExportHistory:   repository.NewExportHistoryRepository(db),
-		WebhookEndpoint: repository.NewWebhookRepository(db),
+		WebhookEndpoint: repository.NewWebhookRepository(db, crypto),
 		WebhookDelivery: repository.NewWebhookDeliveryRepository(db),
 	}
 

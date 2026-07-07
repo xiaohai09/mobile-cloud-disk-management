@@ -2,6 +2,7 @@ package repository
 
 import (
 	"caiyun/internal/models"
+	"caiyun/internal/utils"
 	"context"
 	"time"
 
@@ -10,11 +11,12 @@ import (
 
 // ExchangeAccountRepository 兑换账号数据访问层
 type ExchangeAccountRepository struct {
+	crypto *utils.Crypto
 	db *gorm.DB
 }
 
-func NewExchangeAccountRepository(db *gorm.DB) *ExchangeAccountRepository {
-	return &ExchangeAccountRepository{db: db}
+func NewExchangeAccountRepository(db *gorm.DB, crypto *utils.Crypto) *ExchangeAccountRepository {
+	return &ExchangeAccountRepository{db: db, crypto: crypto}
 }
 
 // WithContext 返回绑定到指定 context 的仓库副本，便于数据库操作响应请求取消和超时。
@@ -22,7 +24,7 @@ func (r *ExchangeAccountRepository) WithContext(ctx context.Context) *ExchangeAc
 	if ctx == nil {
 		return r
 	}
-	return &ExchangeAccountRepository{db: r.db.WithContext(ctx)}
+	return &ExchangeAccountRepository{db: r.db.WithContext(ctx), crypto: r.crypto}
 }
 
 // Create 创建兑换账号

@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"sync/atomic"
+	"time"
 
+	"caiyun/internal/cache"
 	"caiyun/internal/constants"
 	"caiyun/internal/models"
 	"caiyun/internal/notification"
@@ -108,20 +109,22 @@ func registerAutoUpdateProductsJob(scheduler *scheduler.Scheduler, exchangeServi
 }
 
 // registerAccountHealthCheckJob 注册账号健康检查定时任务
-func registerAccountHealthCheckJob(scheduler *scheduler.Scheduler, tokenManager *services.TokenManager, accountRepo *repository.AccountRepository, notifier notification.Notifier) {
+func registerAccountHealthCheckJob(scheduler *scheduler.Scheduler, tokenManager *services.TokenManager, accountRepo *repository.AccountRepository, notifier notification.Notifier, core *cache.RedisCache) {
 	// 每6小时检查一次账号健康状态
 	cronExpr := constants.AccountHealthCheckCron // 使用常量：每6小时
-	var running atomic.Bool
 
 	_, err := scheduler.AddJobWithName(
 		"account_health_check",
 		cronExpr,
 		func() error {
-			if !running.CompareAndSwap(false, true) {
-				log.Println("【账号检测】上一轮健康检查仍在执行，跳过本轮")
+			lockKey := "cron:lock:account_health_check:" + time.Now().Format("2006-01-02:15")
+			locked, lockErr := core.SetNX(lockKey, "1", 2*time.Hour)
+			if lockErr != nil {
+				log.Printf("【账号检测】获取分布式锁失败: %v，降级为本实例执行: key=%s", lockErr, lockKey)
+			} else if !locked {
+				log.Println("【账号检测】已由其他实例执行，跳过")
 				return nil
 			}
-			defer running.Store(false)
 
 			log.Println("【账号检测】开始执行账号健康检查...")
 

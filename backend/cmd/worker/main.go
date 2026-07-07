@@ -101,6 +101,7 @@ func main() {
 		retryManager,
 		taskQueue,
 		multiNotifier,
+		core.Redis,
 		concurrencyLimit,
 	)
 
@@ -109,6 +110,14 @@ func main() {
 		"daily_task_execution",
 		bootstrap.GetEnv("TASK_SCHEDULE", "0 8 * * *"),
 		func() error {
+			lockKey := "cron:lock:daily_task_execution:" + time.Now().Format("2006-01-02")
+			locked, lockErr := core.Redis.SetNX(lockKey, "1", 30*time.Minute)
+			if lockErr != nil {
+				log.Printf("【定时任务】获取分布式锁失败: %v，降级为本实例执行: key=%s", lockErr, lockKey)
+			} else if !locked {
+				log.Println("【定时任务】daily_task_execution 已由其他实例执行，跳过")
+				return nil
+			}
 			log.Println("定时任务开始执行...")
 			return workerInstance.RunAllAccounts()
 		},
@@ -125,7 +134,7 @@ func main() {
 	registerAutoUpdateProductsJob(jobScheduler, exchangeService, repos.SystemConfig, repos.Account)
 
 	// 添加账号健康检查定时任务
-	registerAccountHealthCheckJob(jobScheduler, tokenManager, repos.Account, multiNotifier)
+	registerAccountHealthCheckJob(jobScheduler, tokenManager, repos.Account, multiNotifier, core.Redis)
 
 	workerInstance.Start()
 

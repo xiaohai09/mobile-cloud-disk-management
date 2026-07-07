@@ -2,6 +2,7 @@ package repository
 
 import (
 	"caiyun/internal/models"
+	"caiyun/internal/utils"
 	"time"
 
 	"gorm.io/gorm"
@@ -9,11 +10,12 @@ import (
 
 // WebhookRepository Webhook端点数据访问层
 type WebhookRepository struct {
+	crypto *utils.Crypto
 	db *gorm.DB
 }
 
-func NewWebhookRepository(db *gorm.DB) *WebhookRepository {
-	return &WebhookRepository{db: db}
+func NewWebhookRepository(db *gorm.DB, crypto *utils.Crypto) *WebhookRepository {
+	return &WebhookRepository{db: db, crypto: crypto}
 }
 
 func (r *WebhookRepository) WithContext(ctx interface{}) *WebhookRepository {

@@ -2,17 +2,19 @@ package repository
 
 import (
 	"caiyun/internal/models"
+	"caiyun/internal/utils"
 	"context"
 
 	"gorm.io/gorm"
 )
 
 type AccountRepository struct {
-	db *gorm.DB
+	db    *gorm.DB
+	crypto *utils.Crypto
 }
 
-func NewAccountRepository(db *gorm.DB) *AccountRepository {
-	return &AccountRepository{db: db}
+func NewAccountRepository(db *gorm.DB, crypto *utils.Crypto) *AccountRepository {
+	return &AccountRepository{db: db, crypto: crypto}
 }
 
 // WithContext 返回绑定到指定 context 的仓库副本，便于数据库操作响应请求取消和超时。
@@ -20,11 +22,20 @@ func (r *AccountRepository) WithContext(ctx context.Context) *AccountRepository 
 	if ctx == nil {
 		return r
 	}
-	return &AccountRepository{db: r.db.WithContext(ctx)}
+	return &AccountRepository{db: r.db.WithContext(ctx), crypto: r.crypto}
+}
+
+func (r *AccountRepository) setEncryption(crypto *utils.Crypto) {
+	r.crypto = crypto
 }
 
 // Create 创建账号
 func (r *AccountRepository) Create(account *models.Account) error {
+	if r.crypto != nil {
+		account.Auth = utils.EncryptOrEmpty(r.crypto, account.Auth)
+		account.Token = utils.EncryptOrEmpty(r.crypto, account.Token)
+		account.JWTToken = utils.EncryptOrEmpty(r.crypto, account.JWTToken)
+	}
 	return r.db.Create(account).Error
 }
 
@@ -34,6 +45,11 @@ func (r *AccountRepository) FindByID(id uint) (*models.Account, error) {
 	err := r.db.Preload("User").First(&account, id).Error
 	if err != nil {
 		return nil, err
+	}
+	if r.crypto != nil {
+		account.Auth = utils.DecryptOrEmpty(r.crypto, account.Auth)
+		account.Token = utils.DecryptOrEmpty(r.crypto, account.Token)
+		account.JWTToken = utils.DecryptOrEmpty(r.crypto, account.JWTToken)
 	}
 	return &account, nil
 }
@@ -47,14 +63,34 @@ func (r *AccountRepository) GetByID(id uint) (*models.Account, error) {
 func (r *AccountRepository) GetAll() ([]*models.Account, error) {
 	var accounts []*models.Account
 	err := r.db.Find(&accounts).Error
-	return accounts, err
+	if err != nil {
+		return nil, err
+	}
+	if r.crypto != nil {
+		for i := range accounts {
+			accounts[i].Auth = utils.DecryptOrEmpty(r.crypto, accounts[i].Auth)
+			accounts[i].Token = utils.DecryptOrEmpty(r.crypto, accounts[i].Token)
+			accounts[i].JWTToken = utils.DecryptOrEmpty(r.crypto, accounts[i].JWTToken)
+		}
+	}
+	return accounts, nil
 }
 
 // GetAllActive 获取所有活跃账号
 func (r *AccountRepository) GetAllActive() ([]*models.Account, error) {
 	var accounts []*models.Account
 	err := r.db.Where("is_active = ?", true).Find(&accounts).Error
-	return accounts, err
+	if err != nil {
+		return nil, err
+	}
+	if r.crypto != nil {
+		for i := range accounts {
+			accounts[i].Auth = utils.DecryptOrEmpty(r.crypto, accounts[i].Auth)
+			accounts[i].Token = utils.DecryptOrEmpty(r.crypto, accounts[i].Token)
+			accounts[i].JWTToken = utils.DecryptOrEmpty(r.crypto, accounts[i].JWTToken)
+		}
+	}
+	return accounts, nil
 }
 
 // SearchAll 搜索所有账号（管理员用）
@@ -67,7 +103,17 @@ func (r *AccountRepository) SearchAll(keyword string, limit int) ([]*models.Acco
 	}
 
 	err := query.Preload("User").Limit(limit).Find(&accounts).Error
-	return accounts, err
+	if err != nil {
+		return nil, err
+	}
+	if r.crypto != nil {
+		for i := range accounts {
+			accounts[i].Auth = utils.DecryptOrEmpty(r.crypto, accounts[i].Auth)
+			accounts[i].Token = utils.DecryptOrEmpty(r.crypto, accounts[i].Token)
+			accounts[i].JWTToken = utils.DecryptOrEmpty(r.crypto, accounts[i].JWTToken)
+		}
+	}
+	return accounts, nil
 }
 
 // CountActive 统计当前未删除且启用的账号数量。
@@ -106,7 +152,17 @@ func (r *AccountRepository) TopByCloudCount(limit int) ([]*models.Account, error
 func (r *AccountRepository) FindByUserID(userID uint) ([]*models.Account, error) {
 	var accounts []*models.Account
 	err := r.db.Where("user_id = ?", userID).Find(&accounts).Error
-	return accounts, err
+	if err != nil {
+		return nil, err
+	}
+	if r.crypto != nil {
+		for i := range accounts {
+			accounts[i].Auth = utils.DecryptOrEmpty(r.crypto, accounts[i].Auth)
+			accounts[i].Token = utils.DecryptOrEmpty(r.crypto, accounts[i].Token)
+			accounts[i].JWTToken = utils.DecryptOrEmpty(r.crypto, accounts[i].JWTToken)
+		}
+	}
+	return accounts, nil
 }
 
 // FindByPhone 根据手机号查找账号
@@ -115,6 +171,11 @@ func (r *AccountRepository) FindByPhone(phone string) (*models.Account, error) {
 	err := r.db.Where("phone = ?", phone).First(&account).Error
 	if err != nil {
 		return nil, err
+	}
+	if r.crypto != nil {
+		account.Auth = utils.DecryptOrEmpty(r.crypto, account.Auth)
+		account.Token = utils.DecryptOrEmpty(r.crypto, account.Token)
+		account.JWTToken = utils.DecryptOrEmpty(r.crypto, account.JWTToken)
 	}
 	return &account, nil
 }
@@ -142,7 +203,17 @@ func (r *AccountRepository) List(offset, limit int) ([]*models.Account, int64, e
 	}
 
 	err := query.Preload("User").Offset(offset).Limit(limit).Find(&accounts).Error
-	return accounts, total, err
+	if err != nil {
+		return nil, 0, err
+	}
+	if r.crypto != nil {
+		for i := range accounts {
+			accounts[i].Auth = utils.DecryptOrEmpty(r.crypto, accounts[i].Auth)
+			accounts[i].Token = utils.DecryptOrEmpty(r.crypto, accounts[i].Token)
+			accounts[i].JWTToken = utils.DecryptOrEmpty(r.crypto, accounts[i].JWTToken)
+		}
+	}
+	return accounts, total, nil
 }
 
 // ListByUserID 列出指定用户的账号
@@ -162,14 +233,34 @@ func (r *AccountRepository) ListByUserID(userID uint, offset, limit int, phone s
 	}
 
 	err := query.Offset(offset).Limit(limit).Find(&accounts).Error
-	return accounts, total, err
+	if err != nil {
+		return nil, 0, err
+	}
+	if r.crypto != nil {
+		for i := range accounts {
+			accounts[i].Auth = utils.DecryptOrEmpty(r.crypto, accounts[i].Auth)
+			accounts[i].Token = utils.DecryptOrEmpty(r.crypto, accounts[i].Token)
+			accounts[i].JWTToken = utils.DecryptOrEmpty(r.crypto, accounts[i].JWTToken)
+		}
+	}
+	return accounts, total, nil
 }
 
 // FindActiveAccounts 查找所有激活的账号
 func (r *AccountRepository) FindActiveAccounts() ([]*models.Account, error) {
 	var accounts []*models.Account
 	err := r.db.Where("is_active = ?", true).Find(&accounts).Error
-	return accounts, err
+	if err != nil {
+		return nil, err
+	}
+	if r.crypto != nil {
+		for i := range accounts {
+			accounts[i].Auth = utils.DecryptOrEmpty(r.crypto, accounts[i].Auth)
+			accounts[i].Token = utils.DecryptOrEmpty(r.crypto, accounts[i].Token)
+			accounts[i].JWTToken = utils.DecryptOrEmpty(r.crypto, accounts[i].JWTToken)
+		}
+	}
+	return accounts, nil
 }
 
 // FindActiveAccountsPaged 分页查找激活账号，用于 Worker/统计任务分批处理，避免一次性全表加载。
@@ -183,14 +274,34 @@ func (r *AccountRepository) FindActiveAccountsPaged(offset, limit int) ([]*model
 		Offset(offset).
 		Limit(limit).
 		Find(&accounts).Error
-	return accounts, err
+	if err != nil {
+		return nil, err
+	}
+	if r.crypto != nil {
+		for i := range accounts {
+			accounts[i].Auth = utils.DecryptOrEmpty(r.crypto, accounts[i].Auth)
+			accounts[i].Token = utils.DecryptOrEmpty(r.crypto, accounts[i].Token)
+			accounts[i].JWTToken = utils.DecryptOrEmpty(r.crypto, accounts[i].JWTToken)
+		}
+	}
+	return accounts, nil
 }
 
 // FindActiveAccountsByUserID 查找指定用户的所有激活账号
 func (r *AccountRepository) FindActiveAccountsByUserID(userID uint) ([]*models.Account, error) {
 	var accounts []*models.Account
 	err := r.db.Where("user_id = ? AND is_active = ?", userID, true).Find(&accounts).Error
-	return accounts, err
+	if err != nil {
+		return nil, err
+	}
+	if r.crypto != nil {
+		for i := range accounts {
+			accounts[i].Auth = utils.DecryptOrEmpty(r.crypto, accounts[i].Auth)
+			accounts[i].Token = utils.DecryptOrEmpty(r.crypto, accounts[i].Token)
+			accounts[i].JWTToken = utils.DecryptOrEmpty(r.crypto, accounts[i].JWTToken)
+		}
+	}
+	return accounts, nil
 }
 
 // UpdateCloudCount 更新云朵数量
@@ -200,24 +311,30 @@ func (r *AccountRepository) UpdateCloudCount(id uint, cloudCount int) error {
 
 // UpdateToken 更新Token
 func (r *AccountRepository) UpdateToken(id uint, token string) error {
+	if r.crypto != nil {
+		token = utils.EncryptOrEmpty(r.crypto, token)
+	}
 	return r.db.Model(&models.Account{}).Where("id = ?", id).Update("token", token).Error
 }
 
 // UpdateJWTToken 更新JWT Token
 func (r *AccountRepository) UpdateJWTToken(id uint, jwtToken string) error {
+	if r.crypto != nil {
+		jwtToken = utils.EncryptOrEmpty(r.crypto, jwtToken)
+	}
 	return r.db.Model(&models.Account{}).Where("id = ?", id).Update("jwt_token", jwtToken).Error
 }
 
 // UpdateAuthorizationFields 仅更新 authorization 刷新产生的字段，避免 Save 全量覆盖账号其他并发变更。
 func (r *AccountRepository) UpdateAuthorizationFields(id uint, authValue, token, jwtToken, platform string, expireAt int64) error {
 	updates := map[string]interface{}{
-		"auth":            authValue,
-		"token":           token,
+		"auth":            utils.EncryptOrEmpty(r.crypto, authValue),
+		"token":           utils.EncryptOrEmpty(r.crypto, token),
 		"expire_at":       expireAt,
 		"jwt_error_count": 0,
 	}
 	if jwtToken != "" {
-		updates["jwt_token"] = jwtToken
+		updates["jwt_token"] = utils.EncryptOrEmpty(r.crypto, jwtToken)
 	}
 	if platform != "" {
 		updates["platform"] = platform

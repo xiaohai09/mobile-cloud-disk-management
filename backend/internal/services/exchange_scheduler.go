@@ -248,7 +248,12 @@ func (s *ExchangeScheduler) executeExchangeByTime(hour, minute int) {
 	var tasksToExecute []*models.ExchangeTask
 	var remainingTasks []*models.ExchangeTask
 
-	for _, task := range s.morningQueue {
+	// 从预加载队列（morningQueue / eveningQueue）中筛出当前时间槽的任务
+	allPreloaded := make([]*models.ExchangeTask, 0, len(s.morningQueue)+len(s.eveningQueue))
+	allPreloaded = append(allPreloaded, s.morningQueue...)
+	allPreloaded = append(allPreloaded, s.eveningQueue...)
+
+	for _, task := range allPreloaded {
 		et1 := task.ExchangeAccount.ExchangeTime1
 		et2 := task.ExchangeAccount.ExchangeTime2
 		timeStr := fmt.Sprintf("%02d:%02d:00", hour, minute)
@@ -261,6 +266,7 @@ func (s *ExchangeScheduler) executeExchangeByTime(hour, minute int) {
 	}
 
 	s.morningQueue = remainingTasks
+	s.eveningQueue = nil
 	s.queueMutex.Unlock()
 
 	fromPreparedQueue := len(tasksToExecute) > 0

@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"caiyun/internal/cache"
 	"caiyun/internal/concurrency"
 	"caiyun/internal/monitor"
 	"caiyun/internal/notification"
@@ -32,6 +33,7 @@ type Worker struct {
 	wg             sync.WaitGroup
 	ctx            context.Context
 	cancel         context.CancelFunc
+	redis          *cache.RedisCache
 }
 
 func NewWorker(
@@ -44,6 +46,7 @@ func NewWorker(
 	retryManager *monitor.RetryManager,
 	taskQueue queue.ReliableTaskQueue,
 	notifier notification.Notifier,
+	redis *cache.RedisCache,
 	concurrency int,
 ) *Worker {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -61,6 +64,7 @@ func NewWorker(
 		concurrency:    concurrency,
 		ctx:            ctx,
 		cancel:         cancel,
+		redis:          redis,
 	}
 }
 
@@ -264,6 +268,13 @@ func (w *Worker) ExecuteQueueAccountTask(accountID uint, taskType string) error 
 func (w *Worker) RunAllAccounts() error {
 	const batchSize = 200
 	totalSubmitted := 0
+
+	// 设置 execution round key，用于崩溃恢复感知
+	roundKey := "cron:round:daily_task_execution:" + time.Now().Format("2006-01-02")
+	_ = w.redis.Set(roundKey, time.Now().Format(time.RFC3339), 48*time.Hour)
+	defer func() {
+		_ = w.redis.Del(roundKey)
+	}()
 
 	for offset := 0; ; offset += batchSize {
 		accounts, err := w.accountService.ListActiveAccounts(offset, batchSize)
