@@ -794,7 +794,7 @@ func (h *ExchangeHandler) ExportExchangeRecords(c *gin.Context) {
 	c.Header("Content-Disposition", "attachment; filename=exchange_records.csv")
 
 	// 写入BOM以支持中文
-_, _ = c.Writer.Write([]byte("\xEF\xBB\xBF"))
+	_, _ = c.Writer.Write([]byte("\xEF\xBB\xBF"))
 
 	writer := csv.NewWriter(c.Writer)
 	defer writer.Flush()
@@ -934,7 +934,7 @@ func (h *ExchangeHandler) ImmediateExchange(c *gin.Context) {
 	}
 
 	// 立即执行任务
-go func() { _ = h.exchangeService.ExecuteExchangeTask(c.Request.Context(), task.ID, userID) }()
+	go func() { _ = h.exchangeService.ExecuteExchangeTask(c.Request.Context(), task.ID, userID) }()
 
 	apiresponse.Success(c, ImmediateExchangeResponse{
 		Success: true,
