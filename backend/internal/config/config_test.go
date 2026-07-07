@@ -6,9 +6,9 @@ import (
 )
 
 func TestLoadDefaults(t *testing.T) {
-	os.Unsetenv("APP_NAME")
-	os.Unsetenv("PORT")
-	os.Unsetenv("DB_HOST")
+	_ = os.Unsetenv("APP_NAME")
+	_ = os.Unsetenv("PORT")
+	_ = os.Unsetenv("DB_HOST")
 
 	cfg, err := Load()
 	if err != nil {
@@ -29,11 +29,11 @@ func TestLoadDefaults(t *testing.T) {
 }
 
 func TestLoadEnvOverrides(t *testing.T) {
-	os.Setenv("APP_NAME", "test-app")
-	os.Setenv("PORT", "9090")
-	os.Setenv("DB_HOST", "db-host")
-	os.Setenv("REDIS_DB", "2")
-	os.Setenv("CORS_ORIGINS", "https://a.com,https://b.com")
+	_ = os.Setenv("APP_NAME", "test-app")
+	_ = os.Setenv("PORT", "9090")
+	_ = os.Setenv("DB_HOST", "db-host")
+	_ = os.Setenv("REDIS_DB", "2")
+	_ = os.Setenv("CORS_ORIGINS", "https://a.com,https://b.com")
 
 	cfg, err := Load()
 	if err != nil {
@@ -55,18 +55,18 @@ func TestLoadEnvOverrides(t *testing.T) {
 		t.Errorf("CorsOrigins len = %d, want 2", len(cfg.Security.CorsOrigins))
 	}
 
-	os.Unsetenv("APP_NAME")
-	os.Unsetenv("PORT")
-	os.Unsetenv("DB_HOST")
-	os.Unsetenv("REDIS_DB")
-	os.Unsetenv("CORS_ORIGINS")
+	_ = os.Unsetenv("APP_NAME")
+	_ = os.Unsetenv("PORT")
+	_ = os.Unsetenv("DB_HOST")
+	_ = os.Unsetenv("REDIS_DB")
+	_ = os.Unsetenv("CORS_ORIGINS")
 }
 
 func TestGetStringSliceEnv(t *testing.T) {
-	os.Setenv("CORS_ORIGINS", "https://a.com,https://b.com")
+	_ = os.Setenv("CORS_ORIGINS", "https://a.com,https://b.com")
 	got := getStringSliceEnv("CORS_ORIGINS", []string{"*"})
 	if len(got) != 2 {
 		t.Errorf("len = %d, want 2", len(got))
 	}
-	os.Unsetenv("CORS_ORIGINS")
+	_ = os.Unsetenv("CORS_ORIGINS")
 }
