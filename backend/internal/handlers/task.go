@@ -187,7 +187,7 @@ func (h *TaskHandler) GetCloudStats(c *gin.Context) {
 			respondError(c, http.StatusBadRequest, "无效的账号ID")
 			return
 		}
-		cloudStats, total, err = h.cloudService.GetCloudStatsByAccount(userID.(uint), uint(accountID), page, pageSize)
+		cloudStats, total, _ = h.cloudService.GetCloudStatsByAccount(userID.(uint), uint(accountID), page, pageSize)
 	} else {
 		// 获取用户的所有统计
 		cloudStats, total, err = h.cloudService.GetCloudStatsByUserID(userID.(uint), page, pageSize)
