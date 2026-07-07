@@ -157,10 +157,20 @@ func (w *Worker) processQueueTask(message *queue.TaskMessage) {
 	account, err := w.accountService.GetAccountByID(message.AccountID)
 	if err != nil {
 		log.Printf("获取账号失败: %v", err)
-		w.notifier.SendTaskFailure(message.AccountID, message.TaskType, fmt.Sprintf("获取账号失败: %v", err))
+if err != nil {
+			log.Printf("获取账号失败: %v", err)
+			_ = w.notifier.SendTaskFailure(message.AccountID, message.TaskType, fmt.Sprintf("获取账号失败: %v", err))
+			w.handleQueueTaskFailure(message, err)
+			return
+		}
 		w.handleQueueTaskFailure(message, err)
 		return
-	}
+if err != nil {
+			log.Printf("获取账号失败: %v", err)
+			_ = w.notifier.SendTaskFailure(message.AccountID, message.TaskType, err.Error())
+			w.handleQueueTaskFailure(message, err)
+_ = w.notifier.SendTaskSuccess(message.AccountID, message.TaskType, "任务执行成功")
+		}
 
 	// 执行任务：队列消息可以指定 all/all_tasks 或具体任务类型。
 	if err := w.ExecuteQueueAccountTask(account.ID, message.TaskType); err != nil {
@@ -243,7 +253,7 @@ func (w *Worker) ExecuteQueueAccountTask(accountID uint, taskType string) error 
 		accountID,
 		taskType,
 		func() error {
-			// 刷新Token（如果需要）
+_ = w.taskMonitor.UpdateTaskProgress(accountID, taskType, progress, message)
 			if err := w.accountService.RefreshTokenIfNeeded(account); err != nil {
 				return err
 			}

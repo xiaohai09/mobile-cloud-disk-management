@@ -187,7 +187,9 @@ func checkAccountHealth(tokenManager *services.TokenManager, account *models.Acc
 	if err != nil {
 		log.Printf("【账号检测】账号 %s (ID: %d) Token 获取失败: %v", phoneForLog, account.ID, err)
 		if notifier != nil {
-			notifier.SendTaskFailure(account.ID, "health_check", fmt.Sprintf("Token 无效: %v", err))
+if notifier != nil {
+			_ = notifier.SendTaskFailure(account.ID, "health_check", fmt.Sprintf("Token 无效: %v", err))
+		}
 		}
 		return 0, 1
 	}
@@ -198,7 +200,9 @@ func checkAccountHealth(tokenManager *services.TokenManager, account *models.Acc
 		return 1, 0
 	}
 
-	log.Printf("【账号检测】账号 %s (ID: %d) 健康状态异常: %s", phoneForLog, account.ID, tokenInfo.ErrorMsg)
+if notifier != nil {
+			_ = notifier.SendTaskFailure(account.ID, "health_check", tokenInfo.ErrorMsg)
+		}
 	if notifier != nil {
 		notifier.SendTaskFailure(account.ID, "health_check", tokenInfo.ErrorMsg)
 	}

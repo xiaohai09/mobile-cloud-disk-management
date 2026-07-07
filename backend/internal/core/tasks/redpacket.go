@@ -168,7 +168,7 @@ func (t *RedPacketTask) answerPuzzle() (bool, error) {
 	utils.Sleep(400)
 
 	// 第三步：提交答案（与 mjs B2 → api.submitAnswered 一致）
-	result, err := t.submitAnswer(puzzle.ID, answer)
+	result, _ := t.submitAnswer(puzzle.ID, answer)
 	if result == -1 {
 		return true, nil // 已经全部答完
 	}
