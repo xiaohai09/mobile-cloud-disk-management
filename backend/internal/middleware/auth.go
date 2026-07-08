@@ -442,8 +442,6 @@ func AuthMiddlewareWithUser(jwtManager *jwt.Manager, userRepo *repository.UserRe
 		c.Set("username", username)
 		c.Set("role", role)
 		c.Set(string(authFromCookieKey), authFromCookie)
-
-		c.Next()
 	}
 }
 
