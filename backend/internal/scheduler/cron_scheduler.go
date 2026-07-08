@@ -43,6 +43,14 @@ type Scheduler struct {
 	notifications chan *JobResult
 
 	notificationWG sync.WaitGroup
+	leaseStore     leaseStore
+	leaseTTL       time.Duration
+}
+
+// leaseStore 分布式租约锁存储接口
+type leaseStore interface {
+	SetNX(key string, value interface{}, expiration time.Duration) (bool, error)
+	Del(keys ...string) error
 }
 
 // Config 调度器配置
@@ -50,6 +58,8 @@ type Config struct {
 	MaxResults    int
 	Logger        *log.Logger
 	EnableHistory bool
+	LeaseStore    leaseStore
+	LeaseTTL      time.Duration
 }
 
 // NewScheduler 创建调度器
@@ -82,6 +92,12 @@ func NewScheduler(config ...Config) *Scheduler {
 		cancel:        cancel,
 		logger:        cfg.Logger,
 		notifications: make(chan *JobResult, 100),
+		leaseStore:    cfg.LeaseStore,
+		leaseTTL:      cfg.LeaseTTL,
+	}
+
+	if s.leaseTTL <= 0 {
+		s.leaseTTL = 30 * time.Second
 	}
 
 	return s
@@ -393,8 +409,26 @@ func (w *wrappedJob) Run() {
 	case <-w.context.Done():
 		return
 	default:
-		w.sched.executeJob(w.job)
 	}
+
+	// 分布式租约锁：防止多 Worker 副本同时执行同一 cron 任务。
+	if w.sched.leaseStore != nil {
+		lockKey := fmt.Sprintf("scheduler:lease:%s", w.job.GetName())
+		acquired, err := w.sched.leaseStore.SetNX(lockKey, "1", w.sched.leaseTTL)
+		if err != nil {
+			w.sched.logger.Printf("scheduler lease check failed for %s: %v", w.job.GetName(), err)
+			return
+		}
+		if !acquired {
+			w.sched.logger.Printf("scheduler skip %s: lease held by another worker", w.job.GetName())
+			return
+		}
+		defer func() {
+			_ = w.sched.leaseStore.Del(lockKey)
+		}()
+	}
+
+	w.sched.executeJob(w.job)
 }
 
 func (w *wrappedJob) GetName() string {

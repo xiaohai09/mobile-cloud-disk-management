@@ -198,6 +198,13 @@ func BootstrapAPI() *BootstrapResult {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.MaxMultipartMemory = 8 << 20 // 8 MiB
+
+	// 配置可信代理：防止客户端通过 X-Forwarded-For 伪造 IP，绕过限流与审计。
+	// 仅在显式设置时启用，避免默认信任全部代理。
+	if trustedProxies := strings.TrimSpace(os.Getenv("TRUSTED_PROXIES")); trustedProxies != "" {
+		_ = r.SetTrustedProxies(strings.Split(trustedProxies, ","))
+	}
+
 	r.Use(middleware.RecoveryWithLogger())
 	r.Use(middleware.RequestIDMiddleware())
 	r.Use(middleware.BodySizeLimitMiddleware(10 << 20)) // 10 MiB

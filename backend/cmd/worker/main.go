@@ -73,6 +73,8 @@ func main() {
 	jobScheduler := scheduler.NewScheduler(scheduler.Config{
 		MaxResults: 100,
 		Logger:     log.Default(),
+		LeaseStore: core.Redis,
+		LeaseTTL:   30 * time.Second,
 	})
 
 	// 初始化抢兑调度器（用于定时抢兑任务）
