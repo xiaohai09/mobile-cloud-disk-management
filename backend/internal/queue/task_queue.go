@@ -17,6 +17,7 @@ const (
 	TaskProcessingKey      = "task:queue:processing"
 	TaskDelayedKey         = "task:queue:delayed"
 	TaskDeadLetterKey      = "task:queue:dead"
+	TaskIdempotencyKey     = "task:idempotency"
 	DefaultMaxAttempts     = 3
 	DefaultVisibilityDelay = 15 * time.Minute
 	DefaultRetryBaseDelay  = 30 * time.Second
@@ -51,6 +52,7 @@ type redisQueueStore interface {
 	ZRem(key string, members ...interface{}) (int64, error)
 	ZCard(key string) int64
 	Del(keys ...string) error
+	Eval(script string, keys []string, args ...interface{}) (int64, error)
 }
 
 // TaskMessage 任务消息
@@ -95,6 +97,30 @@ func (q *TaskQueue) Metadata() TaskQueueMetadata {
 
 // Enqueue 将任务加入队列
 func (q *TaskQueue) Enqueue(accountID, userID uint, taskType string) error {
+	return q.EnqueueWithIdempotency(accountID, userID, taskType, "", 0)
+}
+
+// EnqueueWithIdempotency 带幂等键的任务入队。
+// 若 idempotencyKey 非空，先通过 Lua 原子检查并写入 task:idempotency:<key>，
+// 已存在且未过期时直接返回 nil，避免同一执行意图重复入队。
+func (q *TaskQueue) EnqueueWithIdempotency(accountID, userID uint, taskType string, idempotencyKey string, ttl time.Duration) error {
+	if idempotencyKey != "" && ttl > 0 {
+		key := TaskIdempotencyKey + ":" + idempotencyKey
+		script := `
+if redis.call("SET", KEYS[1], ARGV[1], "NX", "EX", ARGV[2]) then
+	return 1
+end
+return 0
+`
+		ok, err := q.cache.Eval(script, []string{key}, time.Now().Unix(), int64(ttl.Seconds()))
+		if err != nil {
+			return fmt.Errorf("幂等检查失败: %w", err)
+		}
+		if ok == 0 {
+			return nil
+		}
+	}
+
 	message := TaskMessage{
 		AccountID:  accountID,
 		UserID:     userID,

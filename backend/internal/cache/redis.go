@@ -619,6 +619,17 @@ func (r *RedisCache) DelByPrefix(prefix string) (int64, error) {
 	return r.client.Del(ctx, keys...).Result()
 }
 
+// Eval 执行 Lua 脚本并返回整数值。
+func (r *RedisCache) Eval(script string, keys []string, args ...interface{}) (int64, error) {
+	ctx, cancel := r.operationContext()
+	defer cancel()
+	result, err := r.client.Eval(ctx, script, keys, args...).Int64()
+	if err != nil {
+		return 0, err
+	}
+	return result, nil
+}
+
 func (r *RedisCache) Close() error {
 	if r.cancel != nil {
 		r.cancel()

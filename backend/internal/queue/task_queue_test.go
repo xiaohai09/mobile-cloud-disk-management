@@ -161,6 +161,10 @@ func (f *fakeQueueStore) Del(keys ...string) error {
 	return nil
 }
 
+func (f *fakeQueueStore) Eval(script string, keys []string, args ...interface{}) (int64, error) {
+	return 0, nil
+}
+
 func asString(value interface{}) string {
 	switch v := value.(type) {
 	case string:
