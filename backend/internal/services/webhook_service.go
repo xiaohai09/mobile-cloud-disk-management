@@ -19,9 +19,10 @@ import (
 
 // WebhookService Webhook通知服务
 type WebhookService struct {
-	webhookRepo *repository.WebhookRepository
+	webhookRepo  *repository.WebhookRepository
 	deliveryRepo *repository.WebhookDeliveryRepository
-	db          *gorm.DB
+	db           *gorm.DB
+	httpClient   *http.Client
 }
 
 func NewWebhookService(
@@ -33,6 +34,14 @@ func NewWebhookService(
 		webhookRepo:  webhookRepo,
 		deliveryRepo: deliveryRepo,
 		db:           db,
+		httpClient:   http.DefaultClient,
+	}
+}
+
+// SetHTTPClient 替换 HTTP 客户端（测试或注入 SafeHTTPClient 时使用）
+func (s *WebhookService) SetHTTPClient(client *http.Client) {
+	if client != nil {
+		s.httpClient = client
 	}
 }
 
@@ -218,36 +227,70 @@ func (s *WebhookService) deliverWebhook(endpoint *models.WebhookEndpoint, eventT
 		}
 	}
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
-	duration := int(time.Since(startTime).Milliseconds())
+	// 重试状态机：最多重试 3 次，退避 5s/15s/45s
+	const maxRetries = 3
+	var lastErr error
+	var delivery *models.WebhookDelivery
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		if attempt > 0 {
+			backoff := 5 * time.Second * time.Duration(1<<(attempt-1))
+			time.Sleep(backoff)
+		}
 
-	delivery := &models.WebhookDelivery{
-		EndpointID: endpoint.ID,
-		UserID:     endpoint.UserID,
-		EventType:  eventType,
-		Payload:    string(payloadBytes),
-		DurationMs: &duration,
-	}
-	if resp != nil {
-		statusCode := resp.StatusCode
-		delivery.StatusCode = &statusCode
-		_ = resp.Body.Close()
-	}
+		resp, err := s.httpClient.Do(req)
+		duration := int(time.Since(startTime).Milliseconds())
 
-	if err != nil {
-		delivery.ErrorMsg = err.Error()
+		delivery = &models.WebhookDelivery{
+			EndpointID: endpoint.ID,
+			UserID:     endpoint.UserID,
+			EventType:  eventType,
+			Payload:    string(payloadBytes),
+			DurationMs: &duration,
+			RetryCount: attempt,
+			Status:     "pending",
+		}
+
+		if resp != nil {
+			statusCode := resp.StatusCode
+			delivery.StatusCode = &statusCode
+			_ = resp.Body.Close()
+		}
+
+		if err != nil {
+			lastErr = err
+			delivery.ErrorMsg = err.Error()
+			delivery.Status = "retry_wait"
+			next := time.Now().Add(5 * time.Second * time.Duration(1<<attempt))
+			delivery.NextRetryAt = &next
+			_ = s.deliveryRepo.Create(delivery)
+			_ = s.increaseFailCount(endpoint.ID)
+			continue
+		}
+
+		if delivery.StatusCode != nil && *delivery.StatusCode >= 200 && *delivery.StatusCode < 300 {
+			delivery.Status = "succeeded"
+			_ = s.deliveryRepo.Create(delivery)
+			_ = s.resetFailCount(endpoint.ID)
+			_ = s.webhookRepo.UpdateLastTriggered(endpoint.ID)
+			return nil
+		}
+
+		lastErr = fmt.Errorf("HTTP %d", *delivery.StatusCode)
+		delivery.ErrorMsg = lastErr.Error()
+		delivery.Status = "retry_wait"
+		next := time.Now().Add(5 * time.Second * time.Duration(1<<attempt))
+		delivery.NextRetryAt = &next
+		_ = s.deliveryRepo.Create(delivery)
 		_ = s.increaseFailCount(endpoint.ID)
-	} else if delivery.StatusCode != nil && *delivery.StatusCode >= 200 && *delivery.StatusCode < 300 {
-		_ = s.resetFailCount(endpoint.ID)
-		_ = s.webhookRepo.UpdateLastTriggered(endpoint.ID)
-	} else {
-		delivery.ErrorMsg = fmt.Sprintf("HTTP %d", *delivery.StatusCode)
-		_ = s.increaseFailCount(endpoint.ID)
 	}
 
-	_ = s.deliveryRepo.Create(delivery)
-	return err
+	// 所有重试用尽，标记为 dead
+	if delivery != nil && delivery.Status != "succeeded" {
+		delivery.Status = "dead"
+		delivery.ErrorMsg = lastErr.Error()
+		_ = s.deliveryRepo.Create(delivery)
+	}
+	return lastErr
 }
 
 func (s *WebhookService) computeSignature(payload []byte, secret string) string {

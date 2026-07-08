@@ -14,7 +14,7 @@ import (
 
 func registerRoutes(r *gin.Engine, deps RouteDependencies) {
 	registerHealthAndMetricsRoutes(r, deps)
-	registerAuthRoutes(r, deps.Handlers.Auth)
+	registerAuthRoutes(r, deps, deps.Handlers.Auth)
 	registerProtectedRoutes(r, deps)
 	registerAdminRoutes(r, deps)
 	registerWebSocketRoute(r, deps)
@@ -37,8 +37,9 @@ func registerHealthAndMetricsRoutes(r *gin.Engine, deps RouteDependencies) {
 	)
 }
 
-func registerAuthRoutes(r *gin.Engine, authHandler *handlers.AuthHandler) {
+func registerAuthRoutes(r *gin.Engine, deps RouteDependencies, authHandler *handlers.AuthHandler) {
 	public := r.Group("/api/auth")
+	public.Use(middleware.AuditMiddleware(deps.AuditRepo))
 	{
 		public.POST("/register", authHandler.Register)
 		public.POST("/login", authHandler.Login)
@@ -57,6 +58,7 @@ func registerProtectedRoutes(r *gin.Engine, deps RouteDependencies) {
 		middleware.AuthMiddlewareWithUser(deps.JWTManager, deps.Repos.User),
 		middleware.CSRFMiddleware(),
 		deps.PostAuthRateMw.HandlerFunc(),
+		middleware.AuditMiddleware(deps.AuditRepo),
 	)
 	{
 		api.GET("/accounts", h.Account.ListAccounts)
@@ -101,6 +103,7 @@ func registerAdminRoutes(r *gin.Engine, deps RouteDependencies) {
 		middleware.AdminMiddleware(),
 		middleware.CSRFMiddleware(),
 		deps.PostAuthRateMw.HandlerFunc(),
+		middleware.AuditMiddleware(deps.AuditRepo),
 	)
 	{
 		admin.GET("/users", h.Admin.GetAllUsers)

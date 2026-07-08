@@ -12,6 +12,7 @@ import (
 	"caiyun/internal/handlers"
 	"caiyun/internal/middleware"
 	"caiyun/internal/monitor"
+	"caiyun/internal/repository"
 	"caiyun/internal/services"
 	"caiyun/internal/ws"
 	"caiyun/pkg/jwt"
@@ -37,6 +38,7 @@ type RouteDependencies struct {
 	RateLimitConfig  *middleware.RateLimitConfig
 	PostAuthRateMw   *middleware.RateLimitMiddlewareInstance
 	AuditFilter      *middleware.AuditLogFilter
+	AuditRepo        *repository.AuditLogRepository
 	MetricsCollector *monitor.Metrics
 	Handlers         RouteHandlers
 }
@@ -217,6 +219,7 @@ func BootstrapAPI() *BootstrapResult {
 		RateLimitConfig:  rateLimitConfig,
 		PostAuthRateMw:   postAuthLimiter,
 		AuditFilter:      auditFilter,
+		AuditRepo:        repos.AuditLog,
 		MetricsCollector: metricsCollector,
 		Handlers: RouteHandlers{
 			Auth:         authHandler,
