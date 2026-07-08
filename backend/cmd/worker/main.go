@@ -1,8 +1,8 @@
 package main
 
 import (
+	"context"
 	"log"
-	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
@@ -83,8 +83,12 @@ func main() {
 	)
 	exchangeScheduler.SetLeaseStore(core.Redis)
 
+	// 设置信号处理
+	rootCtx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+
 	// 启动抢兑调度器
-	exchangeScheduler.Start()
+	exchangeScheduler.Start(rootCtx)
 	log.Println("【Worker】抢兑调度器已启动")
 
 	// 初始化通知服务
@@ -148,17 +152,13 @@ func main() {
 
 	workerInstance.Start()
 
-	// 设置信号处理
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-
 	// 启动监控API（可选）
 	go startMonitoringAPI(workerInstance)
 
 	// 等待信号
 	log.Println("Worker服务已启动，按 Ctrl+C 停止")
-	sig := <-sigChan
-	log.Printf("Worker收到停止信号: %s", sig)
+	<-rootCtx.Done()
+	log.Printf("Worker收到停止信号: %v", rootCtx.Err())
 
 	// 停止服务：先停抢兑调度器，避免 Worker 停止等待期间跨分钟继续触发抢兑。
 	exchangeScheduler.Stop()

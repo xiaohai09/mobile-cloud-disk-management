@@ -6,6 +6,7 @@ import (
 	"caiyun/internal/repository"
 	"caiyun/internal/utils"
 	"caiyun/internal/ws"
+	"context"
 	"fmt"
 	"log"
 	"sync"
@@ -81,7 +82,7 @@ func (s *ExchangeScheduler) SetLeaseStore(store schedulerLeaseStore) {
 }
 
 // Start 启动调度器
-func (s *ExchangeScheduler) Start() {
+func (s *ExchangeScheduler) Start(rootCtx context.Context) {
 	if s == nil {
 		return
 	}
@@ -89,7 +90,7 @@ func (s *ExchangeScheduler) Start() {
 	s.loopWG.Add(1)
 	go func() {
 		defer s.loopWG.Done()
-		s.scheduleLoop()
+		s.scheduleLoop(rootCtx)
 	}()
 }
 
@@ -107,7 +108,7 @@ func (s *ExchangeScheduler) Stop() {
 }
 
 // scheduleLoop 调度循环
-func (s *ExchangeScheduler) scheduleLoop() {
+func (s *ExchangeScheduler) scheduleLoop(rootCtx context.Context) {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
@@ -115,11 +116,13 @@ func (s *ExchangeScheduler) scheduleLoop() {
 		select {
 		case <-s.stopChan:
 			return
+		case <-rootCtx.Done():
+			return
 		case <-ticker.C:
 			if s.isStopped() {
 				return
 			}
-			s.checkAndPrepareExchange()
+			s.checkAndPrepareExchange(rootCtx)
 		}
 	}
 }
@@ -137,13 +140,16 @@ func (s *ExchangeScheduler) isStopped() bool {
 }
 
 // checkAndPrepareExchange 检查并准备抢兑（支持自定义时间）
-func (s *ExchangeScheduler) checkAndPrepareExchange() {
+func (s *ExchangeScheduler) checkAndPrepareExchange(rootCtx context.Context) {
 	if s.isStopped() {
 		return
 	}
 	now := time.Now()
 	if hour, minute, ok := scheduledPrepareSlot(now); ok {
 		if s.isStopped() {
+			return
+		}
+		if rootCtx.Err() != nil {
 			return
 		}
 		if s.claimSchedulerSlot("prepare", now, hour, minute, 10*time.Minute) {
@@ -155,10 +161,13 @@ func (s *ExchangeScheduler) checkAndPrepareExchange() {
 		if s.isStopped() {
 			return
 		}
+		if rootCtx.Err() != nil {
+			return
+		}
 		// 执行阶段不再使用整分钟租约。多副本同时触发时由 TryMarkRunning 抢占任务执行权，
 		// 避免拿到租约的实例在真正执行前崩溃导致整个时间槽漏执行。
 		log.Printf("【抢兑调度器】执行 %02d:%02d 抢兑...", hour, minute)
-		s.executeExchangeByTime(hour, minute)
+		s.executeExchangeByTime(rootCtx, hour, minute)
 	}
 }
 
@@ -238,8 +247,11 @@ func (s *ExchangeScheduler) prepareQueueByTime(hour, minute int) {
 	})
 }
 
-func (s *ExchangeScheduler) executeExchangeByTime(hour, minute int) {
+func (s *ExchangeScheduler) executeExchangeByTime(rootCtx context.Context, hour, minute int) {
 	if s.isStopped() {
+		return
+	}
+	if rootCtx.Err() != nil {
 		return
 	}
 	slot := fmt.Sprintf("%02d:%02d", hour, minute)
@@ -300,12 +312,15 @@ func (s *ExchangeScheduler) executeExchangeByTime(hour, minute int) {
 	if s.isStopped() {
 		return
 	}
+	if rootCtx.Err() != nil {
+		return
+	}
 
 	log.Printf("【抢兑调度器】开始执行 %s 抢兑，共 %d 个任务", slot, len(tasksToExecute))
 	s.batchWG.Add(1)
-	utils.SafeGo("exchange:batch:"+slot, func() {
+	utils.SafeGoCtx("exchange:batch:"+slot, rootCtx, func(ctx context.Context) {
 		defer s.batchWG.Done()
-		s.executeExchangeWithAutoSwitch(tasksToExecute, slot)
+		s.executeExchangeWithAutoSwitch(ctx, tasksToExecute, slot)
 	})
 }
 
@@ -364,7 +379,7 @@ func (s *ExchangeScheduler) prepareEveningQueue() {
 }
 
 // executeMorningExchange 执行上午抢兑
-func (s *ExchangeScheduler) executeMorningExchange() {
+func (s *ExchangeScheduler) executeMorningExchange(rootCtx context.Context) {
 	s.statusMutex.Lock()
 	s.isMorningRunning = true
 	s.statusMutex.Unlock()
@@ -386,11 +401,11 @@ func (s *ExchangeScheduler) executeMorningExchange() {
 	}
 
 	log.Printf("【抢兑调度器】开始执行上午抢兑，共 %d 个任务", len(tasks))
-	s.executeExchangeWithAutoSwitch(tasks, "morning")
+	s.executeExchangeWithAutoSwitch(rootCtx, tasks, "morning")
 }
 
 // executeEveningExchange 执行下午抢兑
-func (s *ExchangeScheduler) executeEveningExchange() {
+func (s *ExchangeScheduler) executeEveningExchange(rootCtx context.Context) {
 	s.statusMutex.Lock()
 	s.isEveningRunning = true
 	s.statusMutex.Unlock()
@@ -412,7 +427,7 @@ func (s *ExchangeScheduler) executeEveningExchange() {
 	}
 
 	log.Printf("【抢兑调度器】开始执行下午抢兑，共 %d 个任务", len(tasks))
-	s.executeExchangeWithAutoSwitch(tasks, "evening")
+	s.executeExchangeWithAutoSwitch(rootCtx, tasks, "evening")
 }
 
 // executeExchangeWithAutoSwitch 执行抢兑（带自动切换账号功能）

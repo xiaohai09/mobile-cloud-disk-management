@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"caiyun/internal/models"
 	"caiyun/internal/utils"
 	"caiyun/internal/ws"
@@ -11,7 +12,7 @@ import (
 	"time"
 )
 
-func (s *ExchangeScheduler) executeExchangeWithAutoSwitch(tasks []*models.ExchangeTask, period string) {
+func (s *ExchangeScheduler) executeExchangeWithAutoSwitch(rootCtx context.Context, tasks []*models.ExchangeTask, period string) {
 	// 按商品ID分组任务
 	taskGroups := s.groupTasksByProduct(tasks)
 
@@ -24,9 +25,9 @@ func (s *ExchangeScheduler) executeExchangeWithAutoSwitch(tasks []*models.Exchan
 
 	for prizeID, groupTasks := range taskGroups {
 		wg.Add(1)
-		utils.SafeGo("exchange:productGroup:"+prizeID, func() {
+		utils.SafeGoCtx("exchange:productGroup:"+prizeID, rootCtx, func(ctx context.Context) {
 			defer wg.Done()
-			s.executeProductGroup(prizeID, groupTasks, limiter)
+			s.executeProductGroup(ctx, prizeID, groupTasks, limiter)
 		})
 	}
 
@@ -58,7 +59,7 @@ func (s *ExchangeScheduler) groupTasksByProduct(tasks []*models.ExchangeTask) ma
 }
 
 // executeProductGroup 执行商品组的抢兑（自动切换账号）
-func (s *ExchangeScheduler) executeProductGroup(prizeID string, tasks []*models.ExchangeTask, limiter chan struct{}) {
+func (s *ExchangeScheduler) executeProductGroup(rootCtx context.Context, prizeID string, tasks []*models.ExchangeTask, limiter chan struct{}) {
 	log.Printf("【抢兑调度器】开始抢兑商品 %s，共 %d 个账号", prizeID, len(tasks))
 
 	successMap := make(map[uint]bool)
@@ -99,13 +100,19 @@ func (s *ExchangeScheduler) executeProductGroup(prizeID string, tasks []*models.
 		task := task
 		accountName := ""
 		wg.Add(1)
-		utils.SafeGo("exchange:task:"+fmt.Sprintf("%d", task.ID), func() {
+		utils.SafeGoCtx("exchange:task:"+fmt.Sprintf("%d", task.ID), rootCtx, func(ctx context.Context) {
 			defer wg.Done()
 
 			if s.isStopped() {
 				log.Printf("【抢兑调度器】任务 %d 跳过执行，调度器已停止", task.ID)
 				recordFailureReason("调度器已停止")
 				s.finalizeTaskResult(task, false, "调度器已停止", 0)
+				return
+			}
+			if ctx.Err() != nil {
+				log.Printf("【抢兑调度器】任务 %d 跳过执行，root context 已取消", task.ID)
+				recordFailureReason("root context 已取消")
+				s.finalizeTaskResult(task, false, "root context 已取消", 0)
 				return
 			}
 			if accountName == "" {
@@ -166,7 +173,7 @@ func (s *ExchangeScheduler) executeProductGroup(prizeID string, tasks []*models.
 				return
 			}
 
-			success, message, execTime := s.executeTask(task)
+			success, message, execTime := s.executeTask(ctx, task)
 			<-limiter
 			if execTime < 0 {
 				log.Printf("【抢兑调度器】任务 %d 跳过执行: %s", task.ID, message)
@@ -235,7 +242,10 @@ func (s *ExchangeScheduler) executeProductGroup(prizeID string, tasks []*models.
 	}
 }
 
-func (s *ExchangeScheduler) executeTask(task *models.ExchangeTask) (bool, string, int) {
+func (s *ExchangeScheduler) executeTask(rootCtx context.Context, task *models.ExchangeTask) (bool, string, int) {
+	if rootCtx.Err() != nil {
+		return false, "root context 已取消", 0
+	}
 	started, err := s.exchangeTaskRepo.TryMarkRunning(task.ID)
 	if err != nil {
 		return false, fmt.Sprintf("抢占任务执行权失败: %v", err), 0
